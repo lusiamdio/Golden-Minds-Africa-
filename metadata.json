@@ -1,0 +1,12 @@
+{
+  "name": "Golden Minds Africa Fellowship App",
+  "description": "Pan-African Diplomatic Website & Intelligent Fellowship Experience Platform with AI-powered policy research, leadership academies, and governance hubs.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
