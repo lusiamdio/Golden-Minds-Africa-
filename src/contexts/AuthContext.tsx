@@ -102,7 +102,7 @@ const DEFAULT_EDUCATIONS: EducationItem[] = [
     id: 'edu-1',
     school: 'Pan-African Institute of Governance & Technology',
     degree: 'Executive Fellowship in Diplomatic Leadership',
-    fieldOfStudy: 'Public Policy, Geopolitics & AI Sovereignty',
+    fieldOfStudy: 'Public Policy, Geopolitics & Digital Sovereignty',
     startYear: '2026',
     endYear: '2027'
   },
@@ -208,7 +208,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         bio: 'Super Admin Command center root administrator of Golden Minds Africa. Leading pan-African youth empowerment and policy transformation.',
         skills: 'Institutional Leadership, Geopolitics, Systems Architecture, Multilateral Diplomacy',
         leadershipTrack: 'Executive Leadership',
-        focusAreas: ['Policy & Governance', 'AI Sovereignty', 'Geopolitics'],
+        focusAreas: ['Policy & Governance', 'Digital Sovereignty', 'Geopolitics'],
         experiences: DEFAULT_EXPERIENCES,
         educations: DEFAULT_EDUCATIONS,
         onboardingCompleted: true
@@ -299,7 +299,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       bio: stored?.bio || 'Super Admin Command center root administrator of Golden Minds Africa. Leading pan-African youth empowerment and policy transformation.',
       skills: stored?.skills || 'Institutional Leadership, Geopolitics, Systems Architecture, Multilateral Diplomacy',
       leadershipTrack: stored?.leadershipTrack || 'Executive Leadership',
-      focusAreas: stored?.focusAreas || ['Policy & Governance', 'AI Sovereignty', 'Geopolitics'],
+      focusAreas: stored?.focusAreas || ['Policy & Governance', 'Digital Sovereignty', 'Geopolitics'],
       experiences: stored?.experiences || DEFAULT_EXPERIENCES,
       educations: stored?.educations || DEFAULT_EDUCATIONS,
       onboardingCompleted: true
@@ -315,8 +315,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     sessionStorage.removeItem('gma-super-admin-authenticated');
     sessionStorage.removeItem('gma-super-admin-redirected');
     sessionStorage.removeItem('gma_portal_active');
+    sessionStorage.removeItem('intended_role');
+    localStorage.removeItem('gma_user_profile');
+    localStorage.removeItem('gma_custom_user');
     setUser(null);
     setProfile(null);
+    setAccessToken(null);
+    setLoading(false);
   };
 
   const logout = async () => {
@@ -329,7 +334,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem('gma_custom_user');
       localStorage.removeItem('onboardingComplete');
       localStorage.removeItem('gma_fellow_profile');
-      await supabase.auth.signOut().catch(() => {});
+      await withTimeout(supabase.auth.signOut().catch(() => ({ error: null })), 1500, { error: null });
     } catch (e) {
       console.warn('Signout warning:', e);
     } finally {
@@ -389,9 +394,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         linkedinUrl: stored?.linkedinUrl || 'https://linkedin.com/in/goldenminds-fellow',
         twitterUrl: stored?.twitterUrl || 'https://twitter.com/gma_fellow',
         leadershipTrack: stored?.leadershipTrack || 'Policy & Governance',
-        focusAreas: stored?.focusAreas || ['Leadership', 'Policy & Governance', 'AI & Technology'],
+        focusAreas: stored?.focusAreas || ['Leadership', 'Policy & Governance', 'Technology & Governance'],
         bio: stored?.bio || dbData?.bio || 'Passionate about shaping Africa\'s future through transformative governance, ethical technology, and regional economic collaboration across the African continent.',
-        skills: stored?.skills || (Array.isArray(dbData?.skills) ? dbData.skills.join(', ') : dbData?.skills) || 'Policy Formulation, Public Governance, AfCFTA Diplomacy, AI Strategy, Strategic Foresight',
+        skills: stored?.skills || (Array.isArray(dbData?.skills) ? dbData.skills.join(', ') : dbData?.skills) || 'Policy Formulation, Public Governance, AfCFTA Diplomacy, Digital Strategy, Strategic Foresight',
         showBioAndSkills: stored?.showBioAndSkills ?? true,
         participationScore: dbData?.participationScore || dbData?.participation_score || stored?.participationScore || 85,
         attendanceStreak: dbData?.attendanceStreak || dbData?.attendance_streak || stored?.attendanceStreak || 7,

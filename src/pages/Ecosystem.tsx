@@ -267,7 +267,7 @@ export default function Ecosystem() {
     setTimeout(() => {
       setArticleSummaries(prev => ({
         ...prev,
-        [articleId]: "AI Summary: This article highlights the critical need for robust digital infrastructure to support economic growth, focusing on broadband expansion and policy reforms to bridge the digital divide."
+        [articleId]: "Executive Summary: This article highlights the critical need for robust digital infrastructure to support economic growth, focusing on broadband expansion and policy reforms to bridge the digital divide."
       }));
       setLoadingSummaries(prev => ({ ...prev, [articleId]: false }));
     }, 1500);
@@ -293,7 +293,7 @@ export default function Ecosystem() {
       setTimeout(() => {
         setChatMessages(prev => [...prev, {
           id: Date.now(),
-          sender: 'AI Moderator',
+          sender: 'Forum Moderator',
           text: 'I noticed you asked a question. Here are some resources from our Knowledge Vault that might help.',
           time: 'Just now',
           isAi: true
@@ -619,7 +619,7 @@ export default function Ecosystem() {
               {aiSuggestedArguments && (
                 <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-4">
                   <h4 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
-                    <Target className="w-4 h-4" /> AI Generated Arguments
+                    <Target className="w-4 h-4" /> Suggested Debate Arguments
                   </h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
@@ -725,7 +725,7 @@ export default function Ecosystem() {
                       type="text" 
                       value={chatMessage}
                       onChange={(e) => setChatMessage(e.target.value)}
-                      placeholder="Type a message... (Ask AI for help)" 
+                      placeholder="Type a message..." 
                       className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-[#C9A646] focus:border-transparent text-sm"
                     />
                     <button 
@@ -808,12 +808,12 @@ export default function Ecosystem() {
                       <div className="bg-gray-50 p-4 rounded-xl">
                         <h4 className="font-bold text-gray-700 text-sm mb-2">Pro Team</h4>
                         <div className="text-sm text-gray-600">{room.proTeam.length > 0 ? room.proTeam.join(', ') : 'Open slots'}</div>
-                        {room.aiScore && <div className="mt-2 text-green-600 font-bold text-sm">AI Score: {room.aiScore.pro}</div>}
+                        {room.aiScore && <div className="mt-2 text-green-600 font-bold text-sm">Score: {room.aiScore.pro}</div>}
                       </div>
                       <div className="bg-gray-50 p-4 rounded-xl">
                         <h4 className="font-bold text-gray-700 text-sm mb-2">Con Team</h4>
                         <div className="text-sm text-gray-600">{room.conTeam.length > 0 ? room.conTeam.join(', ') : 'Open slots'}</div>
-                        {room.aiScore && <div className="mt-2 text-green-600 font-bold text-sm">AI Score: {room.aiScore.con}</div>}
+                        {room.aiScore && <div className="mt-2 text-green-600 font-bold text-sm">Score: {room.aiScore.con}</div>}
                       </div>
                     </div>
                     <div className="flex justify-end">
@@ -902,11 +902,11 @@ export default function Ecosystem() {
                           className="text-sm font-bold text-[#C9A646] hover:text-[#b8972e] flex items-center gap-1 transition-colors disabled:opacity-70"
                         >
                           {loadingSummaries[item.id] ? <div className="w-3 h-3 border-2 border-[#C9A646] border-t-transparent rounded-full animate-spin" /> : <Target className="w-3 h-3" />}
-                          Generate AI Summary
+                          Generate Summary
                         </button>
                       ) : (
                         <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-sm text-blue-900">
-                          <strong className="flex items-center gap-1 mb-1"><Target className="w-4 h-4" /> AI Summary</strong>
+                          <strong className="flex items-center gap-1 mb-1"><Target className="w-4 h-4" /> Executive Summary</strong>
                           {articleSummaries[item.id]}
                         </div>
                       )}
@@ -1017,7 +1017,7 @@ export default function Ecosystem() {
             <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
               <Search className="w-5 h-5 text-blue-600" /> Discover More
             </h3>
-            <p className="text-xs text-gray-600 mb-4">AI-curated recommendations based on your interests and activity.</p>
+            <p className="text-xs text-gray-600 mb-4">Curated recommendations based on your interests and activity.</p>
             <div className="space-y-4">
               {[
                 { title: 'Research: AI in African Healthcare', type: 'Article', match: '98%' },

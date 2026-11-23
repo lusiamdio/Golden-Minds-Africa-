@@ -108,8 +108,8 @@ export default function QuickAIHelper() {
       
       setMessages(prev => [...prev, { role: 'ai', content: text || 'Sorry, I could not process that.' }]);
     } catch (error) {
-      console.error("Error with quick AI:", error);
-      setMessages(prev => [...prev, { role: 'ai', content: 'Error connecting to AI.' }]);
+      console.error("Error with quick helper:", error);
+      setMessages(prev => [...prev, { role: 'ai', content: 'Unable to reach the fellowship advisor right now.' }]);
     } finally {
       setIsTyping(false);
     }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, CalendarPlus, Sparkles } from 'lucide-react';
+import { ArrowLeft, CalendarPlus, Clock } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 export default function LabSession() {
@@ -72,11 +72,11 @@ export default function LabSession() {
           </a>
         </div>
 
-        {/* AI Insights Panel */}
+        {/* Time Insights Panel */}
         <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30">
           <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
-            <h3 className="text-sm sm:text-base font-bold text-blue-900 dark:text-blue-300">AI Time Insight</h3>
+            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
+            <h3 className="text-sm sm:text-base font-bold text-blue-900 dark:text-blue-300">Schedule Time Insight</h3>
           </div>
           <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-200/80 leading-relaxed">
             You have 2 high-focus sessions today. Consider scheduling a 30-minute break before this lab 

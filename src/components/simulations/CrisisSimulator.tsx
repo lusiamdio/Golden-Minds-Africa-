@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { ShieldAlert, Activity, TrendingDown, CheckCircle2, BrainCircuit, ArrowRight, Target } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
+import { ShieldAlert, Activity, TrendingDown, CheckCircle2, Cpu, ArrowRight, Target } from 'lucide-react';
+import { ai } from '../../lib/gemini';
 import Markdown from 'react-markdown';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const scenarios = [
   {
@@ -156,7 +154,7 @@ export default function CrisisSimulator() {
                  className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100"
                >
                  <div className="flex items-center gap-3 font-bold text-[#022c22] mb-6 pb-4 border-b border-gray-100">
-                    <BrainCircuit className="w-6 h-6 text-[#d4af37]" /> Executive Leadership Debrief
+                    <Cpu className="w-6 h-6 text-[#d4af37]" /> Executive Leadership Debrief
                  </div>
                  <div className="markdown-body prose prose-slate max-w-none text-gray-700 leading-relaxed">
                    <Markdown>{debrief}</Markdown>

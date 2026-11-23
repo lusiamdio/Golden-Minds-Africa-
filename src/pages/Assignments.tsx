@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { FileText, Upload, CheckCircle2, Clock, Award, PlayCircle, Mic, Link as LinkIcon, Sparkles, AlertCircle, Save, ChevronRight, MessageSquare, BrainCircuit, X, Check, ArrowUp, ArrowDown } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
+import { FileText, Upload, CheckCircle2, Clock, Award, PlayCircle, Mic, Link as LinkIcon, AlertCircle, Save, ChevronRight, MessageSquare, X, Check, ArrowUp, ArrowDown, Loader2 } from 'lucide-react';
+import Markdown from 'react-markdown';
+import { ai } from '../lib/gemini';
 
 const policyBriefTemplate = `# Policy Brief: [Title - Bold, Outcome-Oriented]
 **Prepared by:** [Institution / Department] | **Date:** [Date]
@@ -67,8 +68,6 @@ Estimated cost, Funding sources, ROI / economic impact
 ## Monitoring & Evaluation
 KPIs (measurable), Data collection methods, Review timeline
 `;
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export default function Assignments() {
   const [activeTab, setActiveTab] = useState<'pending' | 'submitted' | 'reviewed'>('pending');
@@ -217,7 +216,7 @@ export default function Assignments() {
       setAiFeedback(response.text || 'Feedback generation failed.');
     } catch (error) {
       console.error('Error generating feedback:', error);
-      setAiFeedback('Unable to connect to AI Assistant.');
+      setAiFeedback('Unable to reach the Editorial Review service.');
     } finally {
       setIsAnalyzing(false);
     }
@@ -469,15 +468,15 @@ export default function Assignments() {
                       />
                     </div>
 
-                    {/* AI Feedback Section */}
+                    {/* Editorial Feedback Section */}
                     <div className="mt-6 space-y-4">
                       {aiFeedback && (
                         <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 md:p-5">
                           <div className="flex items-center gap-2 text-emerald-800 font-bold mb-3">
-                            <Sparkles className="w-5 h-5" /> AI Feedback Preview
+                            <Award className="w-5 h-5" /> Editorial Feedback Preview
                           </div>
                           <div className="prose prose-sm prose-emerald max-w-none text-emerald-900">
-                            <div dangerouslySetInnerHTML={{ __html: aiFeedback.replace(/\n/g, '<br/>') }} />
+                            <Markdown>{aiFeedback}</Markdown>
                           </div>
                         </div>
                       )}
@@ -488,8 +487,8 @@ export default function Assignments() {
                           disabled={isAnalyzing || !content.trim()}
                           className="flex-1 py-3 sm:py-3.5 bg-[#022c22] hover:bg-[#064e3b] text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-50 text-sm sm:text-base"
                         >
-                          {isAnalyzing ? <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse" /> : <BrainCircuit className="w-4 h-4 sm:w-5 sm:h-5" />}
-                          {isAnalyzing ? 'Analyzing Draft...' : 'Get AI Feedback'}
+                          {isAnalyzing ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> : <FileText className="w-4 h-4 sm:w-5 sm:h-5" />}
+                          {isAnalyzing ? 'Reviewing Draft...' : 'Request Draft Feedback'}
                         </button>
                         <button className="flex-1 py-3 sm:py-3.5 bg-[#d4af37] hover:bg-yellow-500 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2 shadow-lg shadow-yellow-500/20 text-sm sm:text-base">
                           <Upload className="w-4 h-4 sm:w-5 sm:h-5" /> Submit Final

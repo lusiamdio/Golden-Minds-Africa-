@@ -10,9 +10,9 @@ import {
   ChevronRight, 
   Building2, 
   Users, 
-  Sparkles,
   CheckCircle2,
-  Compass
+  Compass,
+  X
 } from 'lucide-react';
 
 interface StructureTier {
@@ -52,7 +52,7 @@ const ORGANIZATIONAL_TIERS: StructureTier[] = [
   {
     id: 'regional-committee',
     tierNumber: 'Tier II',
-    title: 'Regional Commitee',
+    title: 'Regional Committee',
     level: 'Regional Coordination & Inter-State Governance Bureaus',
     icon: Globe2,
     scope: 'Regional Blocs: Southern, East, West, North, & Central Africa',
@@ -72,7 +72,7 @@ const ORGANIZATIONAL_TIERS: StructureTier[] = [
   {
     id: 'national-committee',
     tierNumber: 'Tier III',
-    title: 'National Commitee',
+    title: 'National Committee',
     level: 'National Chapter Directorate & State-Level Executive',
     icon: Flag,
     scope: 'Individual African Sovereign States & National Jurisdictions',
@@ -92,7 +92,7 @@ const ORGANIZATIONAL_TIERS: StructureTier[] = [
   {
     id: 'provincial-committee',
     tierNumber: 'Tier IV',
-    title: 'Provincial Commitee',
+    title: 'Provincial Committee',
     level: 'Sub-National, Provincial & Municipal Leadership Councils',
     icon: MapPin,
     scope: 'Provinces, States, Counties, Regions & Municipalities',
@@ -281,16 +281,17 @@ export default function DiplomaticRoster() {
 
                 <button
                   onClick={() => setSelectedTier(null)}
+                  aria-label="Close charter details"
                   className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white transition-colors shrink-0"
                 >
-                  ✕
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Mandate Description */}
               <div className="my-6">
                 <h4 className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5" /> Institutional Mandate & Scope
+                  <ShieldCheck className="w-3.5 h-3.5" /> Institutional Mandate & Scope
                 </h4>
                 <p className="text-sm text-gray-200 leading-relaxed bg-white/5 p-4 rounded-2xl border border-white/10">
                   {selectedTier.mandate}

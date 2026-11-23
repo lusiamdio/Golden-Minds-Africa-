@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Play, X, Award, ShieldCheck, Quote, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Play, X, Award, ShieldCheck, Quote, CheckCircle2 } from 'lucide-react';
 import executiveImage from '../assets/images/ChatGPT Image Aug 14, 2026, 04_06_19 PM.png';
 import gmaLogo from '../assets/images/logo.png';
 
@@ -106,7 +106,7 @@ export default function PresidentialWelcome() {
             >
               <div className="p-4 bg-black flex items-center justify-between">
                 <div className="flex items-center gap-2 text-[#D4AF37] font-serif font-bold text-sm">
-                  <Sparkles className="w-4 h-4" /> Executive Address 2026
+                  <Award className="w-4 h-4" /> Executive Address 2026
                 </div>
                 <button
                   onClick={() => setShowVideoModal(false)}

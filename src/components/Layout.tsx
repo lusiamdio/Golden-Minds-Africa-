@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { LayoutDashboard, CalendarCheck, BookOpen, MessageSquare, Users, Mic, ShieldAlert, LogOut, X, Loader2, BrainCircuit, Image as ImageIcon, ArrowLeft, Calendar, FileText, Video, Globe, Briefcase, Cpu, Award, ShieldCheck, Database, Compass, FolderOpen, UserPlus, Mail, Lock, User, Menu, Eye, EyeOff, Diamond, Star, GraduationCap, Map, Crown, Sparkles, Sun, Moon, Search, PlayCircle, HeartHandshake } from 'lucide-react';
+import { LayoutDashboard, CalendarCheck, BookOpen, MessageSquare, Users, Mic, ShieldAlert, LogOut, X, Loader2, Image as ImageIcon, ArrowLeft, Calendar, FileText, Video, Globe, Briefcase, Cpu, Award, ShieldCheck, Database, Compass, FolderOpen, UserPlus, Mail, Lock, User, Menu, Eye, EyeOff, Diamond, Star, GraduationCap, Map, Crown, Sun, Moon, Search, PlayCircle, HeartHandshake } from 'lucide-react';
 import QuickAIHelper from './QuickAIHelper';
 import googleBigBg from '../assets/images/african_governance_bg_1781130107908.png';
 import freedomFightersBg from '../assets/images/freedom_fighters_bg_1781179439940.png';
@@ -34,7 +34,7 @@ const MASTER_SEARCH_INDEX = [
   { title: "Marie Uwase - Sustainable Agritech Lead", category: "Mentors", path: "/mentorship", query: "advisor mentor farm advisory plants land" },
   { title: "Digital Policy & Sovereignty Blueprint v2.1", category: "Knowledge Vault", path: "/knowledge", query: "sovereign policy storage cloud security" },
   { title: "Decentralized Grid Network Protocols", category: "Knowledge Vault", path: "/knowledge", query: "ethereum blockchain solar nodes microgrids" },
-  { title: "AI-Augmented Agronomy Soil Report", category: "Knowledge Vault", path: "/knowledge", query: "biology farming earth organic nitrogen report" },
+  { title: "Precision Agronomy Soil Report", category: "Knowledge Vault", path: "/knowledge", query: "biology farming earth organic nitrogen report" },
   { title: "Golden Minds Africa Elite Fellowship 2026", category: "Fellowships", path: "/", query: "main cohort criteria leadership program" },
   { title: "Global Showcase and Digital Portfolio", category: "Fellowships", path: "/showcase", query: "show public resume digital profile" },
   { title: "My Contribution & Membership Dues", category: "Fellowships", path: "/contributions", query: "donate donation monthly membership fee dues credits benefits r100 r50 support" },
@@ -209,6 +209,9 @@ export default function Layout() {
   };
 
   useEffect(() => {
+    // Only redirect when user is inside the Fellowship Portal (not viewing the public website)
+    if (landingView !== 'none') return;
+
     if (user && profile) {
       // Direct session-based redirect for Super Admin
       if ((user.email === 'simao@neurogrowthlabs.co.za' || profile.role === 'admin') && !sessionStorage.getItem('gma-super-admin-redirected')) {
@@ -229,7 +232,7 @@ export default function Layout() {
         navigate('/onboarding', { replace: true });
       }
     }
-  }, [user, profile, navigate, location]);
+  }, [user, profile, navigate, location, landingView]);
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -252,6 +255,23 @@ export default function Layout() {
       if (interval) clearInterval(interval);
     };
   }, [user]);
+
+  // The landing page website must appear first!
+  if (landingView === 'main') {
+    return (
+      <LandingPage 
+        onEnter={() => {
+          sessionStorage.setItem('gma_portal_active', 'true');
+          setLandingView('none');
+        }} 
+        onFellowshipClick={() => setLandingView('fellowship')} 
+      />
+    );
+  }
+
+  if (landingView === 'fellowship') {
+    return <FellowshipLanding onBack={() => setLandingView('main')} />;
+  }
 
   if (loading && !bypassLoading) {
     return (
@@ -280,23 +300,6 @@ export default function Layout() {
     );
   }
 
-  // The landing page website must appear first!
-  if (landingView === 'main') {
-    return (
-      <LandingPage 
-        onEnter={() => {
-          sessionStorage.setItem('gma_portal_active', 'true');
-          setLandingView('none');
-        }} 
-        onFellowshipClick={() => setLandingView('fellowship')} 
-      />
-    );
-  }
-
-  if (landingView === 'fellowship') {
-    return <FellowshipLanding onBack={() => setLandingView('main')} />;
-  }
-
   if (!user) {
     return (
       <div 
@@ -310,11 +313,15 @@ export default function Layout() {
         <div className="absolute inset-0 bg-black/60 z-0"></div>
 
         <button 
-          onClick={() => setLandingView('main')}
-          className="absolute top-6 left-6 text-white/50 hover:text-[#cca568] transition-colors flex items-center gap-2 text-sm font-medium z-20"
+          onClick={() => {
+            sessionStorage.removeItem('gma_portal_active');
+            setLandingView('main');
+            navigate('/', { replace: true });
+          }}
+          className="absolute top-6 left-6 text-white/50 hover:text-[#cca568] transition-colors flex items-center gap-2 text-sm font-medium z-20 cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Profile
+          Back to Website
         </button>
 
         {/* Left Side Values */}
@@ -556,7 +563,7 @@ export default function Layout() {
   const fellowNavItems = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/contributions', icon: HeartHandshake, label: 'My Contribution' },
-    { to: '/notes', icon: Sparkles, label: 'AI Center' },
+    { to: '/notes', icon: FileText, label: 'Research Studio' },
     { to: '/learning-hub', icon: BookOpen, label: 'Learning Hub' },
     { to: '/calendar', icon: Calendar, label: 'Smart Calendar' },
     { to: '/mentorship', icon: UserPlus, label: 'Mentors' },
@@ -651,7 +658,7 @@ export default function Layout() {
         <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto hide-scrollbar pb-20 md:pb-0">
           {currentNavItems.map((item) => {
             const isActive = location.pathname === item.to || (item.to === '/admin' && location.pathname.startsWith('/admin'));
-            // Create specific tour tracking IDs for search, ai center, knowledge vault, and mentors
+            // Create specific tour tracking IDs for search, research studio, knowledge vault, and mentors
             const tourId = item.to === '/' ? 'tour-nav-dashboard' : 
                            item.to === '/notes' ? 'tour-nav-notes' :
                            item.to === '/knowledge' ? 'tour-nav-knowledge' :
@@ -680,7 +687,7 @@ export default function Layout() {
           {isAdminRoute && (
             <button 
               onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
-              className="w-full flex items-center gap-2 px-4 py-2.5 mb-4 text-gray-700 dark:text-gray-305 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-xl transition-colors border border-gray-200 dark:border-zinc-800"
+              className="w-full flex items-center gap-2 px-4 py-2.5 mb-4 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-xl transition-colors border border-gray-200 dark:border-zinc-800"
             >
               <ArrowLeft className="w-4 h-4" />
               <span className="text-sm font-bold">Fellow Dashboard</span>
@@ -692,7 +699,7 @@ export default function Layout() {
           >
             <img src={profile?.avatar || `https://ui-avatars.com/api/?name=${profile?.name}`} alt="Avatar" className="w-10 h-10 rounded-full object-cover border border-gray-100 dark:border-zinc-800" referrerPolicy="no-referrer" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate text-gray-905 dark:text-white">{profile?.name}</p>
+              <p className="text-sm font-semibold truncate text-gray-900 dark:text-white">{profile?.name}</p>
               <p className="text-xs text-gray-500 capitalize">{profile?.role}</p>
             </div>
           </div>
@@ -705,7 +712,7 @@ export default function Layout() {
             </button>
             <button 
               onClick={handleLogout}
-              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-red-650 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors text-xs font-semibold cursor-pointer"
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors text-xs font-semibold cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>Sign Out</span>
@@ -717,7 +724,7 @@ export default function Layout() {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col overflow-hidden w-full">
         {/* Unified Responsive Top Navigation Header Bar */}
-        <header className="bg-white dark:bg-zinc-900 border-b border-gray-250 dark:border-zinc-800 px-4 md:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30 transition-colors">
+        <header className="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 px-4 md:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30 transition-colors">
           {/* Mobile menu toggle button */}
           <div className="flex items-center gap-3">
             <button 
@@ -748,7 +755,7 @@ export default function Layout() {
                   setSearchFocused(true);
                 }}
                 onFocus={() => setSearchFocused(true)}
-                className="w-full bg-gray-50 dark:bg-zinc-805 border border-gray-200 dark:border-zinc-800 rounded-xl pl-10 pr-4 py-2 text-sm text-gray-900 dark:text-zinc-100 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 transition-all font-normal"
+                className="w-full bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-800 rounded-xl pl-10 pr-4 py-2 text-sm text-gray-900 dark:text-zinc-100 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 transition-all font-normal"
               />
             </div>
             
@@ -771,7 +778,7 @@ export default function Layout() {
                     </div>
                   </div>
                 ) : (
-                  <div className="divide-y divide-gray-100 dark:divide-zinc-805">
+                  <div className="divide-y divide-gray-100 dark:divide-zinc-800">
                     {(() => {
                       const query = globalSearch.toLowerCase();
                       const filtered = MASTER_SEARCH_INDEX.filter(item => 
@@ -782,7 +789,7 @@ export default function Layout() {
                       
                       if (filtered.length === 0) {
                         return (
-                          <div className="p-6 text-center text-sm text-gray-405 dark:text-gray-500 font-normal">
+                          <div className="p-6 text-center text-sm text-gray-400 dark:text-gray-500 font-normal">
                             No elements matched your lookup query "{globalSearch}". Try another topic.
                           </div>
                         );
@@ -799,7 +806,7 @@ export default function Layout() {
                           className="p-3.5 hover:bg-amber-50/50 dark:hover:bg-zinc-800/40 cursor-pointer transition-all flex items-start justify-between gap-4"
                         >
                           <div>
-                            <p className="font-serif font-bold text-sm text-gray-905 dark:text-white leading-tight">{item.title}</p>
+                            <p className="font-serif font-bold text-sm text-gray-900 dark:text-white leading-tight">{item.title}</p>
                             <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 leading-snug">{item.query}</p>
                           </div>
                           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-gray-100 dark:bg-zinc-800 text-gray-500 uppercase tracking-widest font-semibold flex-shrink-0">
@@ -821,6 +828,7 @@ export default function Layout() {
               onClick={() => {
                 sessionStorage.removeItem('gma_portal_active');
                 setLandingView('main');
+                navigate('/', { replace: true });
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-[#cca568]/10 hover:bg-[#cca568]/20 text-[#cca568] rounded-xl text-xs font-semibold border border-[#cca568]/30 transition-all cursor-pointer"
               title="Return to Public Institutional Website"
@@ -869,6 +877,33 @@ export default function Layout() {
               <Outlet />
             </motion.div>
           </AnimatePresence>
+
+          {/* Fellowship Platform Official Contact Directory Footer */}
+          <footer className="mt-10 pt-6 border-t border-gray-200 dark:border-zinc-800 text-xs text-gray-500 dark:text-gray-400">
+            <div className="max-w-6xl mx-auto flex flex-col gap-3">
+              <div className="flex items-center gap-2 font-semibold text-gray-700 dark:text-zinc-200 uppercase tracking-wider text-[11px]">
+                <Mail className="w-3.5 h-3.5 text-[#cca568]" />
+                <span>Golden Minds Africa — Official Fellowship Contact Desks</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                {[
+                  { label: 'Protocol', email: 'protocol@goldenmindsafrica.co.za' },
+                  { label: 'Enquiries', email: 'enquire@goldenmindsafrica.co.za' },
+                  { label: 'Chapters', email: 'chapters@goldenmindsafrica.co.za' },
+                  { label: 'Partnerships', email: 'partnership@goldenmindsafrica.co.za' },
+                ].map((c) => (
+                  <a
+                    key={c.email}
+                    href={`mailto:${c.email}`}
+                    className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 hover:border-[#cca568] transition-colors"
+                  >
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#5A5A40] dark:text-[#cca568] shrink-0">{c.label}</span>
+                    <span className="truncate text-[11px] font-medium text-gray-700 dark:text-zinc-300">{c.email}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </footer>
         </div>
       </main>
       <QuickAIHelper />

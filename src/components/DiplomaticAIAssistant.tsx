@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Bot, Send, X, Sparkles, User, Globe, ChevronRight, ShieldCheck, Award } from 'lucide-react';
+import { MessageSquare, Send, X, Compass, User, Globe, ShieldCheck, Award } from 'lucide-react';
 import { generateGeminiContent } from '../lib/gemini';
 
 interface Message {
@@ -13,7 +13,7 @@ export default function DiplomaticAIAssistant() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Welcome to Golden Minds Africa. I am your Diplomatic AI Advisor. How may I assist you with our Pan-African governance programs, research briefs, leadership summits, or partnership opportunities today?'
+      content: 'Welcome to Golden Minds Africa. I am your Diplomatic Advisor. How may I assist you with our Pan-African governance programs, research briefs, leadership summits, or partnership opportunities today?'
     }
   ]);
   const [input, setInput] = useState('');
@@ -41,7 +41,7 @@ export default function DiplomaticAIAssistant() {
 
     try {
       const replyText = await generateGeminiContent({
-        contents: `You are the official Diplomatic AI Advisor for Golden Minds Africa (GMA), a premier Pan-African governance, leadership, research, and policy roundtable organization headquartered in South Africa with operational presence across 54 African nations.
+        contents: `You are the official Diplomatic Advisor for Golden Minds Africa (GMA), a premier Pan-African governance, leadership, research, and policy roundtable organization headquartered in South Africa with operational presence across 54 African nations.
 GMA Key Pillars: Leadership Development, Innovation & Tech, Governance Research, Quality Education & Fellowships, Youth Capital Investment, Continental Partnerships.
 Founder & President: Lusimanadio Soki Simao.
 Core Alignments: AU Agenda 2063, UN SDGs, African Youth Charter, African Governance Architecture (AGA).
@@ -52,10 +52,10 @@ User Inquiry: "${userMsg}"`
 
       setMessages(prev => [...prev, { role: 'assistant', content: replyText || "Thank you for reaching out to Golden Minds Africa. Our diplomatic team is dedicated to supporting youth leadership across all 54 African nations." }]);
     } catch (err) {
-      console.error("AI Assistant error:", err);
+      console.error("Advisor error:", err);
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: "Golden Minds Africa AI Advisor is currently updating credentials. For urgent policy inquiries, please contact our secretariat at info@goldenmindsroundtable.co.za or call +27 67 617 1261."
+        content: "Golden Minds Africa Diplomatic Desk is currently updating credentials. For urgent policy inquiries, please contact our secretariat at info@goldenmindsroundtable.co.za or call +27 67 617 1261."
       }]);
     } finally {
       setIsLoading(false);
@@ -76,11 +76,11 @@ User Inquiry: "${userMsg}"`
             <div className="p-4 bg-gradient-to-r from-[#0A0A0A] via-[#13294B] to-[#0A0A0A] border-b border-white/10 flex items-center justify-between text-white">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#D4AF37] to-[#B8860B] flex items-center justify-center text-black font-bold shadow-lg shadow-[#D4AF37]/20">
-                  <Bot className="w-5 h-5" />
+                  <MessageSquare className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="font-serif font-bold text-base flex items-center gap-2 text-[#D4AF37]">
-                    Diplomatic Advisor AI
+                    Diplomatic Advisor
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   </h3>
                   <p className="text-xs text-gray-300 font-sans">Golden Minds Africa Portal</p>
@@ -116,7 +116,7 @@ User Inquiry: "${userMsg}"`
                 >
                   {msg.role === 'assistant' && (
                     <div className="w-7 h-7 rounded-xl bg-[#D4AF37]/20 border border-white/20 flex items-center justify-center shrink-0 text-[#D4AF37] mt-1">
-                      <Sparkles className="w-3.5 h-3.5" />
+                      <Compass className="w-3.5 h-3.5" />
                     </div>
                   )}
 
@@ -141,7 +141,7 @@ User Inquiry: "${userMsg}"`
               {isLoading && (
                 <div className="flex items-center gap-3 text-gray-400 text-xs py-2">
                   <div className="w-7 h-7 rounded-xl bg-[#D4AF37]/20 border border-white/20 flex items-center justify-center shrink-0 text-[#D4AF37]">
-                    <Sparkles className="w-3.5 h-3.5 animate-spin" />
+                    <Compass className="w-3.5 h-3.5 animate-spin" />
                   </div>
                   <span className="italic">Analyzing diplomatic archive & policy briefs...</span>
                 </div>
@@ -178,9 +178,9 @@ User Inquiry: "${userMsg}"`
         className="flex items-center gap-3 px-5 py-3.5 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#B8860B] text-black font-semibold text-sm shadow-2xl shadow-[#D4AF37]/40 border border-[#FFFFFF]/40 group"
       >
         <div className="w-7 h-7 rounded-full bg-black/20 flex items-center justify-center">
-          <Sparkles className="w-4 h-4 text-black group-hover:rotate-12 transition-transform" />
+          <MessageSquare className="w-4 h-4 text-black group-hover:scale-110 transition-transform" />
         </div>
-        <span className="font-serif tracking-wide text-black font-bold">Diplomatic AI</span>
+        <span className="font-serif tracking-wide text-black font-bold">Diplomatic Advisor</span>
         <div className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-ping" />
       </motion.button>
     </div>

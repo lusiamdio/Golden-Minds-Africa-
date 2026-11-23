@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Globe, Search, ShieldCheck, Menu, X, ArrowRight, User, Sparkles } from 'lucide-react';
+import { Globe, Search, ShieldCheck, Menu, X, ArrowRight, User } from 'lucide-react';
 import gmaLogo from '../assets/images/logo.png';
 
 interface DiplomaticNavProps {
@@ -41,7 +41,8 @@ export default function DiplomaticNav({ onOpenPortal, activeLanguage, onChangeLa
     { name: 'Programs', href: '#programs' },
     { name: 'Leadership', href: '#leadership' },
     { name: 'Research', href: '#newsroom' },
-    { name: 'Donate', href: '#donate' }
+    { name: 'Donate', href: '#donate' },
+    { name: 'Contact', href: '#contact' }
   ];
 
   return (
@@ -78,7 +79,7 @@ export default function DiplomaticNav({ onOpenPortal, activeLanguage, onChangeLa
         {/* Right Controls: Language Selector + Search + Portal CTA */}
         <div className="hidden sm:flex items-center gap-3">
           
-          {/* Global AI Search Trigger */}
+          {/* Global Archive Search Trigger */}
           <button
             onClick={onOpenSearch}
             className="p-2.5 rounded-full bg-white/5 border border-white/10 hover:border-white/40 text-gray-300 hover:text-white transition-all flex items-center gap-2 text-xs"

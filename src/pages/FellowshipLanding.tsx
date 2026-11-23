@@ -248,13 +248,26 @@ export default function FellowshipLanding({ onBack }: FellowshipLandingProps) {
           <p className="text-xl text-gray-400 mb-12">
             The fellowship creates a virtuous cycle — empowered individuals drive institutional strength, which in turn produces better governance outcomes for all of Africa.
           </p>
-          <a
-            href="mailto:admin@goldenmindsafrica.org"
-            className="inline-flex items-center justify-center gap-3 bg-[#cca568] text-black px-8 py-4 rounded-full font-bold text-lg hover:bg-white transition-colors group mb-16"
-          >
-            <Mail className="w-5 h-5" />
-            Contact us: admin@goldenmindsafrica.org
-          </a>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto mb-12 text-left">
+            {[
+              { label: 'Protocol Desk', email: 'protocol@goldenmindsafrica.co.za' },
+              { label: 'General Enquiries', email: 'enquire@goldenmindsafrica.co.za' },
+              { label: 'Chapters & Hubs', email: 'chapters@goldenmindsafrica.co.za' },
+              { label: 'Partnerships', email: 'partnership@goldenmindsafrica.co.za' },
+            ].map((item) => (
+              <a
+                key={item.email}
+                href={`mailto:${item.email}`}
+                className="flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-white/5 border border-white/10 hover:border-[#cca568]/60 transition-colors"
+              >
+                <Mail className="w-4 h-4 text-[#cca568] shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-[10px] uppercase tracking-wider text-[#cca568] font-bold">{item.label}</div>
+                  <div className="text-xs sm:text-sm text-white truncate">{item.email}</div>
+                </div>
+              </a>
+            ))}
+          </div>
 
           <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-gray-500 text-sm">
             <span>© 2026 Golden Minds Africa Fellowship Program.</span>

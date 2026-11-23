@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Calendar, MapPin, Users, Clock, ArrowRight, ShieldCheck, CheckCircle2, Sparkles, X, UserCheck } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, ArrowRight, ShieldCheck, CheckCircle2, X, UserCheck } from 'lucide-react';
 
 interface SummitEvent {
   id: string;
@@ -286,7 +286,7 @@ export default function DiplomaticEvents() {
               ) : (
                 <form onSubmit={handleRegisterSubmit} className="space-y-4">
                   <div className="flex items-center gap-2 text-[#D4AF37] text-xs font-bold uppercase tracking-wider">
-                    <Sparkles className="w-4 h-4" /> Diplomatic Delegate Registration
+                    <ShieldCheck className="w-4 h-4" /> Diplomatic Delegate Registration
                   </div>
                   <h3 className="text-xl font-serif font-bold text-white">
                     {selectedRegisterEvent.title}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Award, Star, Trophy, Target, Zap, Shield, Crown, Medal, TrendingUp, Sparkles, FileText } from 'lucide-react';
+import { Award, Star, Trophy, Target, Zap, Shield, Crown, Medal, TrendingUp, FileText } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { jsPDF } from 'jspdf';
 import { toast } from 'sonner';
@@ -40,6 +41,7 @@ const BADGES = [
 
 export default function Achievements() {
   const { profile } = useAuth();
+  const navigate = useNavigate();
 
   const score = profile?.participationScore || 0;
   const level = Math.floor(score / 50) + 1;
@@ -200,7 +202,7 @@ export default function Achievements() {
               </div>
 
               <button 
-                onClick={() => window.location.href = '/certifications/certificate/leadership-foundations'}
+                onClick={() => navigate('/certifications/certificate/leadership-foundations')}
                 className="w-full py-2 sm:py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm sm:text-base font-bold transition-colors flex items-center justify-center gap-2"
               >
                 <Award className="w-4 h-4 sm:w-5 sm:h-5" /> View Certificate

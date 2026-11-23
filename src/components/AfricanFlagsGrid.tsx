@@ -67,7 +67,7 @@ export default function AfricanFlagsGrid() {
             >
               <span>{region}</span>
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                className={`text-[10px] px-1.5 py-0.5 rounded-full ${
                   selectedRegion === region ? 'bg-black/20 text-black' : 'bg-white/10 text-gray-400'
                 }`}
               >

@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { Calendar as CalendarIcon, Clock, MapPin, Users, Video, Sparkles, ChevronLeft, ChevronRight, Plus, ArrowLeft } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
+import { Calendar as CalendarIcon, Clock, MapPin, Users, Video, ChevronLeft, ChevronRight, Plus, ArrowLeft } from 'lucide-react';
+import { ai } from '../lib/gemini';
 import LabSession from './LabSession';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const MOCK_EVENTS = [];
 
@@ -110,16 +108,16 @@ export default function Schedule() {
 
       {/* Sidebar */}
       <div className="space-y-6">
-        {/* AI Assistant */}
+        {/* Schedule Assistant */}
         <div className="bg-gradient-to-br from-[#ff4e00]/10 to-purple-600/10 border border-[#ff4e00]/20 rounded-2xl p-4 sm:p-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-[#ff4e00]/10 rounded-full blur-3xl" />
           
           <div className="flex items-center gap-3 mb-4 relative z-10">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#ff4e00] to-[#ff6a00] flex items-center justify-center text-white shadow-lg shrink-0">
-              <Sparkles className="w-5 h-5" />
+              <Clock className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-gray-900 dark:text-white text-sm sm:text-base">AI Schedule Assistant</h3>
+              <h3 className="font-bold text-gray-900 dark:text-white text-sm sm:text-base">Schedule Assistant</h3>
               <p className="text-xs text-gray-500 dark:text-gray-400">Optimize your time</p>
             </div>
           </div>
@@ -253,11 +251,11 @@ export default function Schedule() {
       
       <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
         <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-[#ff4e00] to-[#ff6a00] flex items-center justify-center text-white shadow-lg shrink-0">
-          <Sparkles className="w-6 h-6 sm:w-8 sm:h-8" />
+          <Clock className="w-6 h-6 sm:w-8 sm:h-8" />
         </div>
         <div>
-          <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white">AI Schedule Assistant</h1>
-          <p className="text-xs sm:text-base text-gray-500 dark:text-gray-400">Your personal time management copilot.</p>
+          <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white">Schedule Assistant</h1>
+          <p className="text-xs sm:text-base text-gray-500 dark:text-gray-400">Your personal time management companion.</p>
         </div>
       </div>
       
@@ -298,7 +296,7 @@ export default function Schedule() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-serif font-bold text-gray-900 dark:text-white">Smart Calendar</h1>
-          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1 sm:mt-2">Manage your fellowship schedule and get AI-powered time management insights.</p>
+          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1 sm:mt-2">Manage your fellowship schedule and get smart time management insights.</p>
         </div>
         <button 
           onClick={() => navigate('/calendar/events/new')}

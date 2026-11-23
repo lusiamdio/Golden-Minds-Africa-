@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, Download, FileText, Share2, Sparkles, ExternalLink, ArrowRight, CheckCircle2, X } from 'lucide-react';
+import { BookOpen, Download, FileText, Share2, ExternalLink, ArrowRight, CheckCircle2, X } from 'lucide-react';
 import afcftaCoverImage from '../assets/images/122a2330.jpg';
 
 interface Article {

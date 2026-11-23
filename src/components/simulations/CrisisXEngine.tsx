@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShieldAlert, Activity, TrendingDown, Globe, Clock, Radio, Users, AlertTriangle, Play, ChevronRight, Terminal, Zap, FileText, Send, BrainCircuit } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
+import { ShieldAlert, Activity, TrendingDown, Globe, Clock, Radio, Users, AlertTriangle, Play, ChevronRight, Terminal, Zap, FileText, Send, Cpu } from 'lucide-react';
+import { ai } from '../../lib/gemini';
 import Markdown from 'react-markdown';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 interface Metrics {
   gdp: number;
@@ -178,7 +176,7 @@ export default function CrisisXEngine() {
       <div className="bg-[#050505] min-h-[800px] text-gray-300 p-8 overflow-y-auto">
         <div className="max-w-4xl mx-auto space-y-8">
            <div className="flex items-center gap-4 border-b border-white/10 pb-6">
-             <BrainCircuit className="w-10 h-10 text-cyan-500" />
+             <Cpu className="w-10 h-10 text-cyan-500" />
              <div>
                <h1 className="text-3xl font-bold text-white uppercase tracking-widest">Leadership Analytics</h1>
                <p className="text-cyan-500/80 font-mono">Session Terminated. Performance Data Compiled.</p>

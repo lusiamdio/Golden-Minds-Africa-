@@ -37,7 +37,6 @@ import { ThemeProvider } from './contexts/ThemeContext';
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
-import PerformanceMonitor from './components/PerformanceMonitor';
 
 export default function App() {
   return (
@@ -47,7 +46,6 @@ export default function App() {
           <AuthProvider>
             <AdminStateProvider>
               <Toaster position="top-right" richColors />
-              <PerformanceMonitor />
               <BrowserRouter>
               <Routes>
                 <Route path="/onboarding" element={<Onboarding />} />
@@ -62,7 +60,7 @@ export default function App() {
                 <Route index element={<Dashboard />} />
                 <Route path="contributions" element={<Contributions />} />
                 
-                {/* 1. AI Mentor Matching */}
+                {/* 1. Mentor Matching */}
                 <Route path="mentorship/*" element={<Mentors />} />
                 
                 {/* 2. Projects & Portfolio */}

@@ -38,7 +38,7 @@ function NetworkMain() {
 
   const tabs = [
     { id: 'directory', label: 'Fellow Directory', icon: Globe, path: '/pan-african-network/fellows' },
-    { id: 'mentors', label: 'AI Mentor Match', icon: Star, path: '/pan-african-network/mentors' },
+    { id: 'mentors', label: 'Mentor Match', icon: Star, path: '/pan-african-network/mentors' },
     { id: 'opportunities', label: 'Opportunity Market', icon: Briefcase, path: '/pan-african-network/opportunities' },
     { id: 'alumni', label: 'Alumni Legacy', icon: Award, path: '/pan-african-network/alumni' },
   ];
@@ -146,8 +146,8 @@ function NetworkMain() {
           <div className="bg-gradient-to-br from-[#1a1a1a] to-[#2a2a2a] text-white p-6 sm:p-8 rounded-3xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#ff4e00] opacity-10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
             <div className="relative z-10 max-w-2xl">
-              <h2 className="text-2xl sm:text-3xl font-bold font-serif mb-4">AI Mentor Matching</h2>
-              <p className="text-gray-300 mb-6 text-sm sm:text-base">Our AI analyzes your goals, interests, and skill gaps to connect you with the perfect mentor from our global network of leaders.</p>
+              <h2 className="text-2xl sm:text-3xl font-bold font-serif mb-4">Mentor Matching</h2>
+              <p className="text-gray-300 mb-6 text-sm sm:text-base">Our matching engine analyzes your goals, interests, and skill gaps to connect you with the right mentor from our global network of leaders.</p>
               <button className="px-6 py-3 bg-[#ff4e00] text-white font-bold rounded-xl hover:bg-[#e64600] transition-colors flex items-center gap-2 w-full sm:w-auto justify-center">
                 <Star className="w-5 h-5" /> Find My Match
               </button>
@@ -187,7 +187,7 @@ function NetworkMain() {
           <div className="bg-gradient-to-br from-[#ff4e00] to-[#ff8c00] text-white p-6 sm:p-8 rounded-3xl relative overflow-hidden">
             <div className="relative z-10 max-w-2xl">
               <h2 className="text-2xl sm:text-3xl font-bold font-serif mb-4">Opportunity Marketplace</h2>
-              <p className="text-white/90 mb-6 text-sm sm:text-base">AI-curated scholarships, grants, and speaking opportunities tailored to your leadership profile.</p>
+              <p className="text-white/90 mb-6 text-sm sm:text-base">Curated scholarships, grants, and speaking opportunities tailored to your leadership profile.</p>
               <div className="flex gap-4">
                 <button className="px-6 py-3 bg-white text-[#ff4e00] font-bold rounded-xl hover:bg-gray-100 transition-colors flex items-center gap-2 w-full sm:w-auto justify-center">
                   <Search className="w-5 h-5" /> Browse All

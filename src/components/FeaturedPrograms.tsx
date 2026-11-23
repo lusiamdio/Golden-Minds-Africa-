@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { GraduationCap, Award, Cpu, ShieldCheck, Sparkles, ArrowRight, CheckCircle2, Users, X, Send } from 'lucide-react';
+import { GraduationCap, Award, Cpu, ShieldCheck, ArrowRight, CheckCircle2, Users, X, Send } from 'lucide-react';
 
 interface Program {
   id: string;
@@ -160,7 +160,7 @@ export default function FeaturedPrograms() {
 
                 <div className="p-6">
                   <div className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5" /> {prog.stats}
+                    <Award className="w-3.5 h-3.5" /> {prog.stats}
                   </div>
 
                   <h3 className="text-2xl font-serif font-bold text-white group-hover:text-[#D4AF37] transition-colors mt-2">

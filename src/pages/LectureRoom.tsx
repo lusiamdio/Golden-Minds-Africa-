@@ -4,18 +4,16 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Video, Mic, MicOff, VideoOff, MonitorUp, Hand, Smile, PhoneOff, 
   MessageSquare, Users, FileText, Globe, Settings, Maximize, 
-  Minimize, LayoutGrid, LayoutTemplate, Wifi, WifiOff, Volume2, Type, PenTool, BarChart2, Image as ImageIcon, Sparkles, ChevronDown, ChevronUp, Send,
+  Minimize, LayoutGrid, LayoutTemplate, Wifi, WifiOff, Volume2, Type, PenTool, BarChart2, Image as ImageIcon, Compass, ChevronDown, ChevronUp, Send,
   ShieldAlert
 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { GoogleGenAI } from '@google/genai';
+import { ai } from '../lib/gemini';
 import { useAdminState } from '../contexts/AdminStateContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useSupabasePresence } from '../hooks/useSupabasePresence';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const LANGUAGES = [
   { code: 'en', name: 'English' },
@@ -363,7 +361,7 @@ export default function LectureRoom() {
           <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as any)} className="flex flex-col h-full">
             <TabsList className="bg-transparent border-b border-gray-800 rounded-none h-auto p-0 flex w-full">
               <TabsTrigger value="chat" className="flex-1 p-3 rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[#ff4e00] data-[state=active]:border-b-2 data-[state=active]:border-[#ff4e00] data-[state=active]:shadow-none text-gray-400 hover:text-gray-200"><MessageSquare className="w-5 h-5" /></TabsTrigger>
-              <TabsTrigger value="qa" className="flex-1 p-3 rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[#ff4e00] data-[state=active]:border-b-2 data-[state=active]:border-[#ff4e00] data-[state=active]:shadow-none text-gray-400 hover:text-gray-200"><Sparkles className="w-5 h-5" /></TabsTrigger>
+              <TabsTrigger value="qa" className="flex-1 p-3 rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[#ff4e00] data-[state=active]:border-b-2 data-[state=active]:border-[#ff4e00] data-[state=active]:shadow-none text-gray-400 hover:text-gray-200"><Compass className="w-5 h-5" /></TabsTrigger>
               <TabsTrigger value="participants" className="flex-1 p-3 rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[#ff4e00] data-[state=active]:border-b-2 data-[state=active]:border-[#ff4e00] data-[state=active]:shadow-none text-gray-400 hover:text-gray-200"><Users className="w-5 h-5" /></TabsTrigger>
               <TabsTrigger value="transcript" className="flex-1 p-3 rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[#ff4e00] data-[state=active]:border-b-2 data-[state=active]:border-[#ff4e00] data-[state=active]:shadow-none text-gray-400 hover:text-gray-200"><FileText className="w-5 h-5" /></TabsTrigger>
               <TabsTrigger value="translation" className="flex-1 p-3 rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[#ff4e00] data-[state=active]:border-b-2 data-[state=active]:border-[#ff4e00] data-[state=active]:shadow-none text-gray-400 hover:text-gray-200"><Globe className="w-5 h-5" /></TabsTrigger>
@@ -400,7 +398,7 @@ export default function LectureRoom() {
                       }}
                       className="text-xs bg-[#ff4e00] hover:bg-[#ff6a00] text-white px-2 py-1 rounded flex items-center gap-1 transition-colors"
                     >
-                      <Sparkles className="w-3 h-3" /> {isSummaryOpen && summary ? 'Close Summary' : 'Generate Summary'}
+                      <FileText className="w-3 h-3" /> {isSummaryOpen && summary ? 'Close Summary' : 'Generate Summary'}
                     </button>
                     <span className="flex items-center gap-1 text-xs text-green-500 bg-green-500/10 px-2 py-1 rounded">
                       <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Live
@@ -423,7 +421,7 @@ export default function LectureRoom() {
                           </button>
                         </div>
                         <h4 className="text-[#ff4e00] font-bold text-sm mb-2 flex items-center gap-2">
-                          <Sparkles className="w-4 h-4" /> AI Summary
+                          <FileText className="w-4 h-4" /> Lecture Summary
                         </h4>
                         {isGeneratingSummary ? (
                           <div className="flex items-center gap-2 text-gray-400 text-sm">
@@ -458,13 +456,13 @@ export default function LectureRoom() {
               <TabsContent value="translation" className="m-0 h-full">
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-2">AI Translation Agent</h3>
-                  <p className="text-gray-500 text-xs mb-4">Real-time multilingual translation powered by Gemini.</p>
+                    <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-2">Live Translation</h3>
+                  <p className="text-gray-500 text-xs mb-4">Real-time multilingual seminar translation.</p>
                 </div>
 
                 <div className="space-y-4">
                   <div className="flex justify-between items-center bg-gray-800/50 p-3 rounded-xl border border-gray-700">
-                    <span className="text-sm font-medium text-white">Enable AI Translation</span>
+                    <span className="text-sm font-medium text-white">Enable Live Translation</span>
                     <Switch 
                       checked={isTranslating} 
                       onCheckedChange={setIsTranslating} 
@@ -513,7 +511,7 @@ export default function LectureRoom() {
                           <div className="flex gap-3">
                             <Volume2 className="w-5 h-5 text-blue-400 shrink-0" />
                             <p className="text-xs text-blue-300 leading-relaxed">
-                              Listening to translated voice (original muted). You are hearing the AI-generated {LANGUAGES.find(l => l.code === targetLanguage)?.name} voice.
+                              Listening to translated voice (original muted). You are hearing the translated {LANGUAGES.find(l => l.code === targetLanguage)?.name} voice.
                             </p>
                           </div>
                           
@@ -600,8 +598,8 @@ export default function LectureRoom() {
               <TabsContent value="qa" className="m-0 h-full">
                 <div className="flex flex-col h-full">
                   <div className="flex items-center gap-2 mb-4 shrink-0">
-                    <Sparkles className="w-5 h-5 text-[#ff4e00]" />
-                    <h3 className="text-white font-bold text-sm uppercase tracking-wider">AI Assistant</h3>
+                    <Compass className="w-5 h-5 text-[#ff4e00]" />
+                    <h3 className="text-white font-bold text-sm uppercase tracking-wider">Seminar Assistant</h3>
                   </div>
                   
                   <div className="flex-1 overflow-y-auto space-y-4 p-2" ref={qaRef}>
@@ -623,7 +621,7 @@ export default function LectureRoom() {
                     ))}
                     {isGeneratingQa && (
                       <div className="flex flex-col items-start">
-                        <span className="text-xs text-gray-500 mb-1">AI Assistant</span>
+                        <span className="text-xs text-gray-500 mb-1">Seminar Assistant</span>
                         <div className="px-4 py-3 rounded-2xl bg-gray-800 border border-gray-700 rounded-bl-sm flex items-center gap-2">
                           <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                           <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -654,14 +652,14 @@ export default function LectureRoom() {
                             
                             setQaMessages(prev => [...prev, { 
                               id: Date.now(), 
-                              sender: 'AI Assistant', 
+                              sender: 'Seminar Assistant', 
                               text: response.text || 'Sorry, I could not generate an answer.', 
                               time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
                             }]);
                           } catch (error) {
                             setQaMessages(prev => [...prev, { 
                               id: Date.now(), 
-                              sender: 'AI Assistant', 
+                              sender: 'Seminar Assistant', 
                               text: 'Sorry, I encountered an error while trying to answer your question.', 
                               time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
                             }]);
@@ -691,14 +689,14 @@ export default function LectureRoom() {
                             
                             setQaMessages(prev => [...prev, { 
                               id: Date.now(), 
-                              sender: 'AI Assistant', 
+                              sender: 'Seminar Assistant', 
                               text: response.text || 'Sorry, I could not generate an answer.', 
                               time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
                             }]);
                           } catch (error) {
                             setQaMessages(prev => [...prev, { 
                               id: Date.now(), 
-                              sender: 'AI Assistant', 
+                              sender: 'Seminar Assistant', 
                               text: 'Sorry, I encountered an error while trying to answer your question.', 
                               time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
                             }]);

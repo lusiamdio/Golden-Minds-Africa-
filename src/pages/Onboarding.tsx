@@ -5,10 +5,8 @@ import {
   ChevronRight, 
   Camera, 
   Target, 
-  Brain, 
   BookOpen, 
   CheckCircle2, 
-  Sparkles, 
   Globe, 
   Award,
   ArrowRight,
@@ -19,25 +17,31 @@ import {
   MapPin,
   Check,
   RefreshCw,
-  ExternalLink,
   Linkedin,
-  FileText
+  FileText,
+  Landmark,
+  Cpu,
+  Zap,
+  Scale,
+  HeartPulse,
+  Sprout,
+  Rocket,
+  Crown,
+  MessageSquare
 } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
+import { ai } from '../lib/gemini';
 import { useAuth } from '../contexts/AuthContext';
 import { AFRICAN_COUNTRIES } from '../data/africanCountries';
 import { PRESET_AVATARS, PRESET_COVERS, compressImageFile } from '../lib/imageUtils';
 import { toast } from 'sonner';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-
 const STRATEGIC_PILLARS = [
-  { id: 'geopolitics', label: 'Geopolitics & Multilateral Diplomacy', icon: '🏛️', desc: 'Sovereignty, border security, regional pacts & AU Agenda 2063' },
-  { id: 'technology', label: 'AI Sovereignty & Digital Infrastructure', icon: '💻', desc: 'Compute clusters, cross-border fiber, data privacy & African LLMs' },
-  { id: 'climate', label: 'Energy Transition & Climate Governance', icon: '⚡', desc: 'Renewable microgrids, mineral value-chains & carbon trading' },
-  { id: 'trade', label: 'AfCFTA Intra-African Trade & Finance', icon: '🌍', desc: 'Tariff reduction, pan-African payment systems & logistics hubs' },
-  { id: 'ethics', label: 'Ethical Governance & Anti-Corruption', icon: '⚖️', desc: 'Public financial oversight, rule of law & civic transparency' },
-  { id: 'health', label: 'Public Health & Bio-Security Innovation', icon: '🧬', desc: 'Continental vaccine production, telemedicine & epidemic defense' }
+  { id: 'geopolitics', label: 'Geopolitics & Multilateral Diplomacy', icon: Landmark, desc: 'Sovereignty, border security, regional pacts & AU Agenda 2063' },
+  { id: 'technology', label: 'Digital Sovereignty & Infrastructure', icon: Cpu, desc: 'Compute clusters, cross-border fiber, data privacy & regional cloud ecosystems' },
+  { id: 'climate', label: 'Energy Transition & Climate Governance', icon: Zap, desc: 'Renewable microgrids, mineral value-chains & carbon trading' },
+  { id: 'trade', label: 'AfCFTA Intra-African Trade & Finance', icon: Globe, desc: 'Tariff reduction, pan-African payment systems & logistics hubs' },
+  { id: 'ethics', label: 'Ethical Governance & Anti-Corruption', icon: Scale, desc: 'Public financial oversight, rule of law & civic transparency' },
+  { id: 'health', label: 'Public Health & Bio-Security Innovation', icon: HeartPulse, desc: 'Continental vaccine production, telemedicine & epidemic defense' }
 ];
 
 const LEADERSHIP_TIERS = [
@@ -46,21 +50,21 @@ const LEADERSHIP_TIERS = [
     title: 'Emerging Fellow',
     cohortTag: 'Foundational Track',
     desc: 'Developing initial frameworks in public policy, civic engagement, and grassroots diplomacy.',
-    icon: '🌱'
+    icon: Sprout
   },
   {
     id: 'practitioner',
     title: 'Strategic Practitioner',
     cohortTag: 'Applied Governance Track',
     desc: 'Actively running community initiatives, civil society projects, or tech-enabled public programs.',
-    icon: '🚀'
+    icon: Rocket
   },
   {
     id: 'architect',
     title: 'Policy Architect & Diplomatic Fellow',
     cohortTag: 'Executive Leadership Track',
     desc: 'Drafting high-level legislation, directing continental youth forums, and structuring policy memos.',
-    icon: '👑'
+    icon: Crown
   }
 ];
 
@@ -95,7 +99,7 @@ export default function Onboarding() {
     integrity: false
   });
 
-  // AI Assistant preview state
+  // Fellowship Advisor preview state
   const [aiQuery, setAiQuery] = useState('');
   const [aiResponse, setAiResponse] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -186,22 +190,18 @@ export default function Onboarding() {
     }
   };
 
-  // AI Co-Pilot Interaction
+  // Advisor Interaction
   const handleAiInteraction = async () => {
     if (!aiQuery.trim()) return;
     setIsAiLoading(true);
     try {
-      if (process.env.GEMINI_API_KEY) {
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: `You are the Golden Minds Africa Diplomatic Assistant. A fellow named ${formData.name || 'Fellow'} asked: "${aiQuery}". Respond in 2 crisp, inspiring sentences detailing how Golden Minds Africa supports their leadership track in ${formData.country || 'Africa'}.`
-        });
-        setAiResponse(response.text || 'Welcome to Golden Minds Africa. We are honored to accompany your leadership journey.');
-      } else {
-        setAiResponse(`Welcome, Fellow ${formData.name || 'Leader'}. The Golden Minds Africa ecosystem equips you with rigorous geopolitical frameworks, bilateral debate labs, and direct access to African institutional architects.`);
-      }
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: `You are the Golden Minds Africa Diplomatic Advisor. A fellow named ${formData.name || 'Fellow'} asked: "${aiQuery}". Respond in 2 crisp, inspiring sentences detailing how Golden Minds Africa supports their leadership track in ${formData.country || 'Africa'}.`
+      });
+      setAiResponse(response.text || 'Welcome to Golden Minds Africa. We are honored to accompany your leadership journey.');
     } catch (err) {
-      setAiResponse(`Welcome, Fellow ${formData.name || 'Leader'}. You are equipped with direct access to our 54-nation peer network, policy repositories, and executive mentorship circles.`);
+      setAiResponse(`Welcome, Fellow ${formData.name || 'Leader'}. The Golden Minds Africa ecosystem equips you with rigorous geopolitical frameworks, bilateral debate labs, and direct access to African institutional architects.`);
     } finally {
       setIsAiLoading(false);
     }
@@ -308,20 +308,12 @@ export default function Onboarding() {
           <button
             onClick={() => {
               sessionStorage.removeItem('gma_portal_active');
-              navigate('/');
+              navigate('/', { replace: true });
             }}
             className="text-xs text-gray-400 hover:text-[#d4af37] transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-800 hover:border-[#d4af37]/40 cursor-pointer"
           >
             <Globe className="w-3.5 h-3.5 text-[#d4af37]" />
             <span>Website</span>
-          </button>
-
-          <button
-            onClick={() => navigate('/profile')}
-            className="text-xs text-gray-400 hover:text-[#d4af37] transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-800 hover:border-[#d4af37]/40"
-          >
-            <span>Skip to Profile</span>
-            <ExternalLink className="w-3.5 h-3.5" />
           </button>
         </div>
       </header>
@@ -395,24 +387,24 @@ export default function Onboarding() {
                       Welcome to the <span className="text-[#d4af37]">Golden Minds Africa</span> Fellowship
                     </h1>
                     <p className="mt-3 text-gray-300 text-sm sm:text-base leading-relaxed">
-                      You are entering a sovereign continental leadership ecosystem designed to architect Africa's next fifty years. Here, high-caliber fellows convene to master multilateral diplomacy, AI governance, AfCFTA trade, and civic leadership.
+                      You are entering a sovereign continental leadership ecosystem designed to architect Africa's next fifty years. Here, high-caliber fellows convene to master multilateral diplomacy, digital governance, AfCFTA trade, and civic leadership.
                     </p>
                   </div>
 
                   {/* Institutional Pillars Highlight */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2">
                     <div className="p-3.5 rounded-xl bg-[#122119] border border-[#1e392b] text-left">
-                      <div className="text-xl mb-1">🌍</div>
+                      <Globe className="w-5 h-5 text-[#d4af37] mb-1.5" />
                       <div className="font-semibold text-white text-xs">54 African States</div>
                       <div className="text-[11px] text-gray-400 mt-0.5">Cross-border fellowship alliance</div>
                     </div>
                     <div className="p-3.5 rounded-xl bg-[#122119] border border-[#1e392b] text-left">
-                      <div className="text-xl mb-1">🏛️</div>
+                      <Landmark className="w-5 h-5 text-[#d4af37] mb-1.5" />
                       <div className="font-semibold text-white text-xs">Agenda 2063</div>
                       <div className="text-[11px] text-gray-400 mt-0.5">Policy blueprints & capstones</div>
                     </div>
                     <div className="p-3.5 rounded-xl bg-[#122119] border border-[#1e392b] text-left">
-                      <div className="text-xl mb-1">⚡</div>
+                      <Zap className="w-5 h-5 text-[#d4af37] mb-1.5" />
                       <div className="font-semibold text-white text-xs">LinkedIn-Ready Profile</div>
                       <div className="text-[11px] text-gray-400 mt-0.5">Verified diplomatic credential</div>
                     </div>
@@ -482,7 +474,7 @@ export default function Onboarding() {
                         <span className="text-[10px] text-gray-500 self-center">Suggestions:</span>
                         {[
                           'Energy Transition Fellow @ GMA | AfCFTA Diplomat',
-                          'AI Governance & Digital Sovereignty Fellow',
+                          'Digital Governance & Sovereignty Fellow',
                           'Public Policy Architect | Youth Representative'
                         ].map((sug, i) => (
                           <button
@@ -765,7 +757,7 @@ export default function Onboarding() {
                           }`}
                         >
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xl">{pillar.icon}</span>
+                            {React.createElement(pillar.icon, { className: "w-5 h-5 text-[#d4af37]" })}
                             <div className={`w-4 h-4 rounded-full flex items-center justify-center border ${
                               isSelected ? 'border-[#d4af37] bg-[#d4af37] text-[#080d0a]' : 'border-gray-700'
                             }`}>
@@ -788,7 +780,7 @@ export default function Onboarding() {
                       type="text"
                       value={formData.skills}
                       onChange={(e) => handleDataChange({ skills: e.target.value })}
-                      placeholder="e.g. Policy Formulation, AfCFTA Strategy, AI Sovereignty, Multilateral Diplomacy"
+                      placeholder="e.g. Policy Formulation, AfCFTA Strategy, Digital Sovereignty, Multilateral Diplomacy"
                       className="w-full px-4 py-2.5 bg-[#121f18] border border-[#1f372a] focus:border-[#d4af37] rounded-xl text-white text-sm outline-none transition-all"
                     />
                   </div>
@@ -841,7 +833,7 @@ export default function Onboarding() {
                           }`}
                         >
                           <div className="flex items-start gap-3">
-                            <span className="text-2xl">{tier.icon}</span>
+                            {React.createElement(tier.icon, { className: "w-6 h-6 text-[#d4af37] mt-0.5 shrink-0" })}
                             <div>
                               <div className="flex items-center gap-2">
                                 <h3 className="font-bold text-white text-sm">{tier.title}</h3>
@@ -989,11 +981,11 @@ export default function Onboarding() {
                     </div>
                   </div>
 
-                  {/* AI Copilot Quick Check */}
+                  {/* Fellowship Advisor Quick Check */}
                   <div className="bg-[#121f18] border border-[#1f372a] rounded-xl p-4 space-y-3">
                     <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400">
-                      <Sparkles className="w-4 h-4" />
-                      <span>Meet Your Diplomatic AI Co-Pilot</span>
+                      <MessageSquare className="w-4 h-4" />
+                      <span>Meet Your Diplomatic Fellowship Advisor</span>
                     </div>
 
                     {aiResponse ? (
@@ -1007,7 +999,7 @@ export default function Onboarding() {
                           value={aiQuery}
                           onChange={(e) => setAiQuery(e.target.value)}
                           onKeyDown={(e) => e.key === 'Enter' && handleAiInteraction()}
-                          placeholder="Ask AI: How does this fellowship help me influence policy?"
+                          placeholder="Ask Advisor: How does this fellowship help me influence policy?"
                           className="flex-1 px-3 py-2 bg-[#0a120e] border border-gray-800 rounded-lg text-xs text-white outline-none focus:border-emerald-500"
                         />
                         <button
@@ -1015,7 +1007,7 @@ export default function Onboarding() {
                           disabled={isAiLoading || !aiQuery.trim()}
                           className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition-colors"
                         >
-                          {isAiLoading ? 'Synthesizing...' : 'Test AI'}
+                          {isAiLoading ? 'Preparing...' : 'Ask Advisor'}
                         </button>
                       </div>
                     )}

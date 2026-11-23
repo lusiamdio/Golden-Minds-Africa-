@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Globe, 
   Landmark, 
-  Sparkles, 
   Building2, 
   ShieldCheck, 
   ArrowRight, 
@@ -436,7 +435,7 @@ export default function PartnerLogoWall() {
             </div>
 
             <p className="text-center text-xs text-gray-400 mt-4 flex items-center justify-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" /> Hover over any partner card to pause scrolling or click to view full charter
+              <Award className="w-3.5 h-3.5 text-[#D4AF37]" /> Hover over any partner card to pause scrolling or click to view full charter
             </p>
           </div>
         </div>

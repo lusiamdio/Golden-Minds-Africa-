@@ -7,7 +7,6 @@ import {
   DollarSign, 
   ArrowUpRight, 
   Download, 
-  Sparkles, 
   ShieldCheck, 
   Calendar, 
   Award, 
@@ -22,7 +21,8 @@ import {
   FileText,
   BadgeCheck,
   Zap,
-  Users
+  Users,
+  X
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
@@ -124,7 +124,7 @@ const MEMBERSHIP_BENEFITS = [
   },
   {
     title: 'Unrestricted Knowledge & Crisis Access',
-    description: 'Unlimited access to the sovereign Knowledge Vault, Diplomatic AI Assistants, and Crisis Simulation Engine.',
+    description: 'Unlimited access to the sovereign Knowledge Vault, Diplomatic Advisors, and Crisis Simulation Engine.',
     icon: ShieldCheck,
     tag: 'Technology'
   },
@@ -858,7 +858,7 @@ export default function Contributions() {
         
         <div className="relative z-10 max-w-3xl mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-semibold uppercase tracking-wider mb-2">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <Award className="w-3.5 h-3.5 text-amber-400" />
             <span>Active Fellowship Privileges</span>
           </div>
           <h2 className="text-2xl md:text-3xl font-extrabold text-white font-serif">
@@ -921,9 +921,10 @@ export default function Contributions() {
               </div>
               <button 
                 onClick={() => setSelectedReceipt(null)}
+                aria-label="Close receipt modal"
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-white text-xs font-bold p-1 cursor-pointer"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 

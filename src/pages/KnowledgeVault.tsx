@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
-import { Search, Book, FileText, Video, Network, Sparkles, Filter, ChevronRight, Hash } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
+import { Search, Book, FileText, Video, Network, BookOpen, Filter, ChevronRight, Hash } from 'lucide-react';
+import { ai } from '../lib/gemini';
 import Markdown from 'react-markdown';
 import KnowledgeGraph from './KnowledgeGraph';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const MOCK_RESOURCES = [];
 
@@ -30,33 +28,15 @@ function KnowledgeVaultMain() {
         });
         setAiSummary(response.text);
       } else {
-        // Live Web Search using Perplexity RapidAPI
-        const options = {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-rapidapi-host': 'perplexity2.p.rapidapi.com',
-            'x-rapidapi-key': 'cd707cd18emsha46a78d1c51103cp11a3eajsn047d42571f12'
-          },
-          body: JSON.stringify({ content: searchQuery })
-        };
-        const res = await fetch('https://perplexity2.p.rapidapi.com/', options);
-        if (!res.ok) throw new Error('Failed to fetch from live web API.');
-        const data = await res.json();
-        
-        // Extract text depending on exact API payload shape (usually Gemini-like choices[0].content.parts[0].text for this specific RapidAPI endpoint)
-        let text = "No content returned.";
-        if (data.choices && data.choices[0] && data.choices[0].content && data.choices[0].content.parts) {
-            text = data.choices[0].content.parts[0].text;
-        } else if (data.text) {
-            text = data.text; // Fallback
-        } else if (typeof data === 'string') {
-            text = data;
-        } else {
-            text = JSON.stringify(data, null, 2);
-        }
-        
-        setAiSummary(text);
+        // Live Web Research via backend proxy with Google Search grounding
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: `Provide a well-structured policy & research summary answering: "${searchQuery}". Cite key recent developments and African institutional context where relevant.`,
+          config: {
+            tools: [{ googleSearch: {} }]
+          }
+        });
+        setAiSummary(response.text || 'No content returned.');
       }
     } catch (error: any) {
       console.error('Search Error:', error);
@@ -71,18 +51,18 @@ function KnowledgeVaultMain() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-serif font-bold text-gray-900 dark:text-white">Knowledge Vault</h1>
-          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1 sm:mt-2">Collective intelligence library of all cohorts, powered by AI.</p>
+          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1 sm:mt-2">Collective intelligence library of all cohorts and policy briefs.</p>
         </div>
       </div>
 
-      {/* Search & AI Section */}
+      {/* Search & Research Section */}
       <div className="bg-gradient-to-br from-[#022c22] to-[#011a14] rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-[#d4af37]/10 rounded-full blur-3xl" />
         
         <div className="relative z-10 max-w-3xl mx-auto space-y-5 sm:space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-[#d4af37] mb-1 sm:mb-2">
             <div className="flex items-center gap-2 sm:gap-3">
-              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
+              <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
               <h2 className="text-lg sm:text-xl font-bold">Ask the Vault</h2>
             </div>
             
@@ -110,7 +90,7 @@ function KnowledgeVaultMain() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAISearch()}
-                placeholder={searchMode === 'internal' ? "E.g., What are the key policies for digital infrastructure?" : "Search the web (Perplexity AI) for live news..."}
+                placeholder={searchMode === 'internal' ? "E.g., What are the key policies for digital infrastructure?" : "Search live policy developments and news..."}
                 className="w-full bg-white/10 border border-white/20 text-white placeholder-gray-400 rounded-xl pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 text-sm sm:text-base focus:outline-none focus:border-[#d4af37] transition-colors"
               />
             </div>
@@ -130,8 +110,8 @@ function KnowledgeVaultMain() {
               className="bg-white/5 backdrop-blur-md rounded-xl p-4 sm:p-6 border border-white/10 text-gray-200"
             >
               <div className="flex items-center gap-2 mb-2 sm:mb-3 text-[#d4af37]">
-                <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="font-bold text-[10px] sm:text-sm uppercase tracking-wider">{searchMode === 'web' ? 'Live Web Summary (Perplexity)' : 'AI Synthesis (Local Vault)'}</span>
+                <BookOpen className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="font-bold text-[10px] sm:text-sm uppercase tracking-wider">{searchMode === 'web' ? 'Web Research Digest' : 'Vault Research Digest'}</span>
               </div>
               <div className="prose prose-invert max-w-none text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
                 <Markdown>{aiSummary}</Markdown>

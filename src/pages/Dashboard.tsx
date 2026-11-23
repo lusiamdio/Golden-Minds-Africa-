@@ -2,17 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'motion/react';
-import { Calendar, Clock, MapPin, Sparkles, TrendingUp, Award, Loader2, Trophy, Medal, Star, MessageCircle, BookOpen, Upload, CheckCircle, Smile, Send, RefreshCw, BrainCircuit } from 'lucide-react';
+import { Calendar, Clock, MapPin, TrendingUp, Award, Loader2, Trophy, Medal, Star, MessageCircle, BookOpen, Upload, CheckCircle, Smile, Send, RefreshCw, Compass, Target, Activity, Mail } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from '../lib/supabase';
-import { GoogleGenAI } from '@google/genai';
-import { generateGeminiContent } from '../lib/gemini';
+import { ai, generateGeminiContent } from '../lib/gemini';
 import { toast } from 'sonner';
 import Markdown from 'react-markdown';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, Cell } from 'recharts';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export default function Dashboard() {
   const { profile } = useAuth();
@@ -102,41 +99,39 @@ export default function Dashboard() {
 
   // Daily Check-in state
   const [checkInText, setCheckInText] = useState('');
-  const [checkInEmoji, setCheckInEmoji] = useState('🌟');
+  const [checkInMood, setCheckInMood] = useState('Focused');
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
   const [checkInGreeting, setCheckInGreeting] = useState('');
-  const EMOJI_OPTIONS = ['🌟', '🔥', '💡', '🚀', '🧠', '❤️'];
+  const MOOD_OPTIONS = ['Focused', 'Motivated', 'Curious', 'Resilient', 'Collaborative'];
 
   const fetchDailyRecap = async () => {
     setRecapLoading(true);
     try {
       const greetingName = profile?.name?.split(' ')[0] || 'Fellow';
       const prompt = `
-You are the Golden Minds Africa AI system. Synthesize a warm, encouraging, short morning recap for the user "${greetingName}".
+You are the Golden Minds Africa Fellowship briefing system. Synthesize a warm, encouraging, short morning recap for the fellow "${greetingName}".
 The recap MUST summarize:
 - Upcoming Tasks & Schedule: Attend Peer Mentorship circle with Advisor Marie Uwase at 4:00 PM today.
 - Pending Assignments: "Module 3: Leadership Philosophy Blueprint Submission" (Due tomorrow at 11:59 PM). "Cohort Debate Feedback Form" (due in 3 days).
 - New Ecosystem Highlights: Fellow Samuel Chike uploaded an Agritech East Africa Soil Science publication, and administrators verified 4 cyberdefense certifications.
 
-Style guidelines: Give a cheerful personalized morning saludo. List the actionable task and pending assignments with bullet-points, and outline ecosystem updates in a brief sentence. Keep the layout clean, beautifully structured in Markdown format. Keep the entire response under 150 words.
+Style guidelines: Give a cheerful personalized morning greeting with no emojis. List the actionable task and pending assignments with bullet-points, and outline ecosystem updates in a brief sentence. Keep the layout clean, beautifully structured in Markdown format. Keep the entire response under 150 words.
       `.trim();
 
       let recapText = '';
-      if (process.env.GEMINI_API_KEY) {
-        try {
-          recapText = await generateGeminiContent({
-            contents: prompt
-          });
-        } catch (callErr) {
-          console.warn("AI daily recap generation notice:", callErr);
-        }
+      try {
+        recapText = await generateGeminiContent({
+          contents: prompt
+        });
+      } catch (callErr) {
+        console.warn("Daily recap generation notice:", callErr);
       }
 
-      setDailyRecap(recapText || `Good morning, ${greetingName}! 🌟 Today's Focus:\n\n* **Peer Mentorship Circle**: Join Advisor Marie Uwase at 4:00 PM.\n* **Pending Assignment**: Module 3 Leadership Philosophy Blueprint (Due tomorrow at 11:59 PM).\n* **Ecosystem Highlight**: Fellow Samuel Chike published a new East Africa Agritech policy brief.`);
+      setDailyRecap(recapText || `Good morning, ${greetingName}! Today's Focus:\n\n* **Peer Mentorship Circle**: Join Advisor Marie Uwase at 4:00 PM.\n* **Pending Assignment**: Module 3 Leadership Philosophy Blueprint (Due tomorrow at 11:59 PM).\n* **Ecosystem Highlight**: Fellow Samuel Chike published a new East Africa Agritech policy brief.`);
     } catch (err: any) {
       console.warn("Notice in fetchDailyRecap:", err);
       const greetingName = profile?.name?.split(' ')[0] || 'Fellow';
-      setDailyRecap(`Good morning, ${greetingName}! 🌟\n\n* **Upcoming Schedule**: Peer Mentorship session with Advisor Marie Uwase at 4:00 PM today.\n* **Pending Task**: Submit Module 3: Leadership Philosophy Blueprint (due tomorrow at 11:59 PM).\n* **Cohort Progress**: 4 cyberdefense policy papers verified today.`);
+      setDailyRecap(`Good morning, ${greetingName}!\n\n* **Upcoming Schedule**: Peer Mentorship session with Advisor Marie Uwase at 4:00 PM today.\n* **Pending Task**: Submit Module 3: Leadership Philosophy Blueprint (due tomorrow at 11:59 PM).\n* **Cohort Progress**: 4 cyberdefense policy papers verified today.`);
     } finally {
       setRecapLoading(false);
     }
@@ -200,7 +195,7 @@ Style guidelines: Give a cheerful personalized morning saludo. List the actionab
   }, [profile?.id]);
 
   const earnedBadges = [
-    { id: 'pioneer', name: 'Pioneer', description: 'Joined the platform', icon: Sparkles, color: 'text-purple-600', bg: 'bg-purple-50', earned: true },
+    { id: 'pioneer', name: 'Pioneer', description: 'Joined the platform', icon: Award, color: 'text-purple-600', bg: 'bg-purple-50', earned: true },
     { id: 'attendance', name: 'Consistent', description: '3+ day streak', icon: Calendar, color: 'text-green-600', bg: 'bg-green-50', earned: (profile?.attendanceStreak || 0) >= 3 },
     { id: 'debater', name: 'Top Debater', description: 'Score > 50', icon: MessageCircle, color: 'text-[#ff4e00]', bg: 'bg-orange-50', earned: (profile?.participationScore || 0) >= 50 },
     { id: 'contributor', name: 'Contributor', description: 'Score > 20', icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50', earned: (profile?.participationScore || 0) >= 20 },
@@ -244,7 +239,7 @@ Style guidelines: Give a cheerful personalized morning saludo. List the actionab
     e.preventDefault();
     if (!checkInText.trim()) return;
     setHasCheckedIn(true);
-    setCheckInGreeting(`Thanks for checking in, ${profile?.name?.split(' ')[0] || 'Fellow'}! Stay focused on your goal: "${checkInText}" ${checkInEmoji}`);
+    setCheckInGreeting(`Thanks for checking in, ${profile?.name?.split(' ')[0] || 'Fellow'} (${checkInMood})! Stay focused on your goal: "${checkInText}"`);
     toast.success("Daily check-in completed!");
   };
 
@@ -285,15 +280,15 @@ Style guidelines: Give a cheerful personalized morning saludo. List the actionab
         </div>
         {!hasCheckedIn && (
           <form onSubmit={handleCheckIn} className="flex-1 w-full max-w-md flex flex-col sm:flex-row gap-3">
-            <div className="flex bg-gray-50 rounded-xl p-1 gap-1 border border-gray-100">
-              {EMOJI_OPTIONS.map(emoji => (
+            <div className="flex flex-wrap bg-gray-50 rounded-xl p-1 gap-1 border border-gray-100">
+              {MOOD_OPTIONS.map(mood => (
                 <button
-                  key={emoji}
+                  key={mood}
                   type="button"
-                  onClick={() => setCheckInEmoji(emoji)}
-                  className={`w-10 h-10 flex items-center justify-center text-lg rounded-lg transition-transform ${checkInEmoji === emoji ? 'bg-white shadow-sm scale-110' : 'hover:bg-gray-100'}`}
+                  onClick={() => setCheckInMood(mood)}
+                  className={`px-2.5 py-1.5 flex items-center justify-center text-xs font-semibold rounded-lg transition-all cursor-pointer ${checkInMood === mood ? 'bg-white shadow-sm text-[#ff4e00]' : 'text-gray-600 hover:bg-gray-100'}`}
                 >
-                  {emoji}
+                  {mood}
                 </button>
               ))}
             </div>
@@ -317,7 +312,7 @@ Style guidelines: Give a cheerful personalized morning saludo. List the actionab
         )}
       </div>
 
-      {/* Gemini Powered Daily Recap Card */}
+      {/* Personalized Daily Recap Card */}
       <div 
         id="daily-recap-section" 
         className="bg-gradient-to-br from-emerald-50 to-[#cca568]/15 dark:from-[#011a14] dark:to-zinc-900 border border-emerald-100 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-sm relative overflow-hidden transition-all duration-300"
@@ -327,18 +322,18 @@ Style guidelines: Give a cheerful personalized morning saludo. List the actionab
         <div className="relative z-10 flex flex-col md:flex-row md:items-start md:justify-between gap-6">
           <div className="space-y-3 flex-1">
             <div className="flex items-center gap-2.5 text-amber-700 dark:text-amber-400 font-bold text-xs uppercase tracking-wider">
-              <BrainCircuit className="w-5 h-5 text-amber-700 dark:text-amber-400 animate-pulse" />
-              <span>Personalized Daily AI Recap</span>
+              <Compass className="w-5 h-5 text-amber-700 dark:text-amber-400" />
+              <span>Personalized Daily Briefing</span>
             </div>
             
-            <h2 className="text-xl sm:text-2xl font-serif font-bold text-gray-905 dark:text-white leading-tight">
+            <h2 className="text-xl sm:text-2xl font-serif font-bold text-gray-900 dark:text-white leading-tight">
               A quick look at your day
             </h2>
 
             {recapLoading ? (
               <div className="py-6 flex items-center gap-3 text-gray-500 dark:text-gray-400 text-sm">
                 <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
-                <span className="font-medium">Gemini is synthesizing upcoming tasks, assignments, and fellowship network data...</span>
+                <span className="font-medium">Compiling upcoming tasks, assignments, and fellowship network updates...</span>
               </div>
             ) : dailyRecap ? (
               <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 text-sm leading-relaxed space-y-2 mt-2 font-normal">
@@ -346,7 +341,7 @@ Style guidelines: Give a cheerful personalized morning saludo. List the actionab
               </div>
             ) : (
               <p className="text-gray-500 dark:text-gray-400 text-sm italic">
-                Set a main goal above and tap "Refresh Recap" to compose your day.
+                Set a main goal above and tap "Refresh Briefing" to compose your day.
               </p>
             )}
           </div>
@@ -355,10 +350,10 @@ Style guidelines: Give a cheerful personalized morning saludo. List the actionab
             type="button"
             disabled={recapLoading}
             onClick={fetchDailyRecap}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-750 rounded-xl text-xs font-semibold shadow-sm border border-gray-150 dark:border-zinc-700 transition-all disabled:opacity-50 cursor-pointer w-max self-start md:self-auto"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 rounded-xl text-xs font-semibold shadow-sm border border-gray-200 dark:border-zinc-700 transition-all disabled:opacity-50 cursor-pointer w-max self-start md:self-auto"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${recapLoading ? 'animate-spin text-amber-500' : ''}`} />
-            <span>Generate Recap</span>
+            <span>Refresh Briefing</span>
           </button>
         </div>
       </div>
@@ -425,7 +420,7 @@ Style guidelines: Give a cheerful personalized morning saludo. List the actionab
             </div>
           </motion.div>
 
-          {/* AI Insights & Maps Grounding */}
+          {/* Strategic Guidance & Maps Grounding */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
@@ -437,8 +432,8 @@ Style guidelines: Give a cheerful personalized morning saludo. List the actionab
               <div 
                 className="flex items-center gap-2 mb-4 sm:mb-6 transition-opacity"
               >
-                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#ff4e00]" />
-                <h3 className="text-lg sm:text-xl font-bold font-serif">AI Leadership Copilot</h3>
+                <Target className="w-4 h-4 sm:w-5 sm:h-5 text-[#ff4e00]" />
+                <h3 className="text-lg sm:text-xl font-bold font-serif">Leadership Guidance</h3>
               </div>
               <div className="bg-[#f5f5f0] rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-200">
                 <p className="text-gray-700 leading-relaxed text-xs sm:text-sm mb-4">
@@ -449,7 +444,7 @@ Style guidelines: Give a cheerful personalized morning saludo. List the actionab
                     className="text-[10px] sm:text-xs text-gray-500 uppercase font-bold tracking-wider mb-2 cursor-pointer hover:text-[#ff4e00] transition-colors"
                     onClick={() => navigate('/achievements')}
                   >
-                    AI Future Pathway Predictor
+                    Recommended Leadership Pathway
                   </p>
                   <p className="text-xs sm:text-sm font-medium text-[#5A5A40]">
                     "Based on your engagement in policy debates and research contributions, you are well suited for governance and public leadership roles."
@@ -480,7 +475,7 @@ Style guidelines: Give a cheerful personalized morning saludo. List the actionab
                   </div>
                 ) : nearbyHubs ? (
                   <div className="prose prose-sm max-w-none text-gray-700 text-xs sm:text-sm">
-                    <div dangerouslySetInnerHTML={{ __html: nearbyHubs.replace(/\n/g, '<br/>') }} />
+                    <Markdown>{nearbyHubs}</Markdown>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full text-center">
@@ -555,9 +550,9 @@ Style guidelines: Give a cheerful personalized morning saludo. List the actionab
               className="bg-blue-50 rounded-2xl p-3 sm:p-4 border border-blue-100 flex items-start gap-2 sm:gap-3 cursor-pointer hover:bg-blue-100 transition-colors"
               onClick={() => navigate('/knowledge')}
             >
-              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 shrink-0 mt-0.5" />
+              <Compass className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 shrink-0 mt-0.5" />
               <div>
-                <p className="text-xs sm:text-sm font-bold text-blue-900 mb-1">AI Sovereign Advisor Insight</p>
+                <p className="text-xs sm:text-sm font-bold text-blue-900 mb-1">Fellowship Advisor Insight</p>
                 <p className="text-xs sm:text-sm text-blue-800">"<span className="cursor-pointer hover:underline font-bold" onClick={(e) => { e.stopPropagation(); navigate('/achievements'); }}>Your crisis response speed is in the top 10%.</span> To improve your Policy Score, focus on integrating more quantitative evidence in your next brief."</p>
               </div>
             </div>
@@ -572,10 +567,10 @@ Style guidelines: Give a cheerful personalized morning saludo. List the actionab
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 sm:mb-6">
               <div className="flex items-center gap-2">
-                <BrainCircuit className="w-5 h-5 text-[#ff4e00]" />
+                <Activity className="w-5 h-5 text-[#ff4e00]" />
                 <h3 className="text-lg sm:text-xl font-bold font-serif">Fellow Engagement Heatmap</h3>
               </div>
-              <div className="flex bg-gray-100 dark:bg-zinc-850 p-1 rounded-xl text-xs font-bold gap-1">
+              <div className="flex bg-gray-100 dark:bg-zinc-800 p-1 rounded-xl text-xs font-bold gap-1">
                 <span className="text-[#ff4e00] bg-white dark:bg-zinc-900 px-3 py-1 rounded-lg shadow-sm">Past 30 Days</span>
               </div>
             </div>
@@ -595,7 +590,7 @@ Style guidelines: Give a cheerful personalized morning saludo. List the actionab
               <div className="flex flex-wrap gap-[6px] justify-center sm:justify-start">
                 {engagementData.map((day, idx) => {
                   // Determine heat shade based on minutes
-                  let bgClass = "bg-gray-200 dark:bg-zinc-850";
+                  let bgClass = "bg-gray-200 dark:bg-zinc-800";
                   if (day.minutes > 0 && day.minutes <= 15) bgClass = "bg-[#ffebe5]";
                   else if (day.minutes > 15 && day.minutes <= 30) bgClass = "bg-[#ffbb99]";
                   else if (day.minutes > 30 && day.minutes <= 45) bgClass = "bg-[#ff884d]";
@@ -622,7 +617,7 @@ Style guidelines: Give a cheerful personalized morning saludo. List the actionab
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 pt-4 border-t border-gray-200/55 text-xs text-gray-500">
                 <div className="flex items-center gap-2">
                   <span>Less</span>
-                  <div className="w-3 h-3 rounded bg-gray-200 dark:bg-zinc-850" />
+                  <div className="w-3 h-3 rounded bg-gray-200 dark:bg-zinc-800" />
                   <div className="w-3 h-3 rounded bg-[#ffebe5]" />
                   <div className="w-3 h-3 rounded bg-[#ffbb99]" />
                   <div className="w-3 h-3 rounded bg-[#ff884d]" />
@@ -674,21 +669,21 @@ Style guidelines: Give a cheerful personalized morning saludo. List the actionab
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => handleLogStudyTime(15)}
-                  className="px-4 py-2 bg-white text-gray-800 hover:bg-gray-100 border border-gray-200 text-xs sm:text-sm font-semibold rounded-xl transition-all shadow-sm active:scale-95 flex items-center gap-1"
+                  className="px-4 py-2 bg-white text-gray-800 hover:bg-gray-100 border border-gray-200 text-xs sm:text-sm font-semibold rounded-xl transition-all shadow-sm active:scale-95 flex items-center gap-1.5"
                 >
-                  ⏱️ +15m Lecture Stream
+                  <Clock className="w-3.5 h-3.5 text-[#5A5A40]" /> +15m Lecture Stream
                 </button>
                 <button
                   onClick={() => handleLogStudyTime(30)}
-                  className="px-4 py-2 bg-white text-gray-800 hover:bg-gray-100 border border-gray-200 text-xs sm:text-sm font-semibold rounded-xl transition-all shadow-sm active:scale-95 flex items-center gap-1"
+                  className="px-4 py-2 bg-white text-gray-800 hover:bg-gray-100 border border-gray-200 text-xs sm:text-sm font-semibold rounded-xl transition-all shadow-sm active:scale-95 flex items-center gap-1.5"
                 >
-                  📚 +30m Syllabus Reading
+                  <BookOpen className="w-3.5 h-3.5 text-[#5A5A40]" /> +30m Syllabus Reading
                 </button>
                 <button
                   onClick={() => handleLogStudyTime(60)}
-                  className="px-4 py-2 bg-[#ff4e00]/10 text-[#ff4e00] hover:bg-[#ff4e00] hover:text-white border border-[#ff4e00]/25 text-xs sm:text-sm font-semibold rounded-xl transition-all shadow-sm active:scale-95 flex items-center gap-1"
+                  className="px-4 py-2 bg-[#ff4e00]/10 text-[#ff4e00] hover:bg-[#ff4e00] hover:text-white border border-[#ff4e00]/25 text-xs sm:text-sm font-semibold rounded-xl transition-all shadow-sm active:scale-95 flex items-center gap-1.5"
                 >
-                  🔥 +1h Active Quiz & Debate
+                  <Award className="w-3.5 h-3.5" /> +1h Active Quiz & Debate
                 </button>
               </div>
             </div>
@@ -926,6 +921,32 @@ Style guidelines: Give a cheerful personalized morning saludo. List the actionab
                 >
                   Attendance Rate: 85%
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-2xl shadow-sm border-gray-100">
+            <CardContent className="p-5 sm:p-6 space-y-3">
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-[#ff4e00]" />
+                <h2 className="text-base sm:text-lg font-bold">Secretariat Contact Desks</h2>
+              </div>
+              <div className="space-y-2 text-xs">
+                {[
+                  { label: 'Protocol', email: 'protocol@goldenmindsafrica.co.za' },
+                  { label: 'General Enquiries', email: 'enquire@goldenmindsafrica.co.za' },
+                  { label: 'Chapters', email: 'chapters@goldenmindsafrica.co.za' },
+                  { label: 'Partnerships', email: 'partnership@goldenmindsafrica.co.za' },
+                ].map((desk) => (
+                  <a
+                    key={desk.email}
+                    href={`mailto:${desk.email}`}
+                    className="block p-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-100 transition-colors"
+                  >
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-[#5A5A40]">{desk.label}</span>
+                    <span className="font-medium text-gray-800 break-all">{desk.email}</span>
+                  </a>
+                ))}
               </div>
             </CardContent>
           </Card>

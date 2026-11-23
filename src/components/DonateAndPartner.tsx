@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Heart, Coins, ShieldCheck, Building2, UserPlus, CheckCircle2, Sparkles, X, ArrowRight } from 'lucide-react';
+import { Heart, Coins, ShieldCheck, Building2, UserPlus, CheckCircle2, X, ArrowRight } from 'lucide-react';
 
 export default function DonateAndPartner() {
   const [activeTab, setActiveTab] = useState<'donate' | 'sponsor' | 'partner' | 'volunteer'>('donate');
@@ -171,7 +171,7 @@ export default function DonateAndPartner() {
                   <option>West Africa Hub (Lagos / Accra)</option>
                   <option>Southern Africa Hub (Johannesburg / Cape Town)</option>
                   <option>Women in Public Office Initiative</option>
-                  <option>AI Ethics & Agritech Policy Labs</option>
+                  <option>Digital Governance & Agritech Policy Labs</option>
                 </select>
               </div>
 

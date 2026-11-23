@@ -1,9 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Send, Bot, User, ShieldAlert, Trophy, Loader2 } from 'lucide-react';
-import { GoogleGenAI, ThinkingLevel } from '@google/genai';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+import { Send, User, ShieldAlert, Trophy, Loader2 } from 'lucide-react';
+import { ai } from '../lib/gemini';
 
 interface Message {
   id: string;
@@ -67,7 +65,7 @@ function DebatesMain() {
         • [Point 2]
         Score: [Number]/10`,
         config: {
-          thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH }
+          thinkingConfig: { thinkingLevel: 'HIGH' }
         }
       });
 
@@ -103,7 +101,7 @@ function DebatesMain() {
       <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-serif mb-1 sm:mb-2">Debate Engine</h1>
-          <p className="text-gray-600 text-xs sm:text-sm md:text-base">Live AI-moderated debate room.</p>
+          <p className="text-gray-600 text-xs sm:text-sm md:text-base">Live moderated debate room.</p>
         </div>
         <div className="flex gap-2 sm:gap-4 w-full sm:w-auto">
           <div className="bg-white px-3 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center flex-1 sm:flex-none">
@@ -137,7 +135,7 @@ function DebatesMain() {
               <div className={`max-w-[85%] sm:max-w-[80%] ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
                 <div className={`flex items-center gap-1 sm:gap-2 mb-1 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {msg.role === 'moderator' ? (
-                    <span className="text-[8px] sm:text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-500">AI Moderator</span>
+                    <span className="text-[8px] sm:text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-500">Debate Moderator</span>
                   ) : (
                     <span className="text-[8px] sm:text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-500">Team {msg.team}</span>
                   )}

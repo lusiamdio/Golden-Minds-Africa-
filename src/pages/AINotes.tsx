@@ -1,19 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Sparkles, Send, Bot, User, HelpCircle, Globe, MapPin, 
-  Brain, FileImage, Image as ImageIcon, Video, Mic, Square, 
+  Compass, Send, MessageSquare, User, HelpCircle, Globe, MapPin, 
+  FileText, FileImage, Image as ImageIcon, Video, Mic, Square, 
   Play, Volume2, VideoOff, Layers, Trash2, Clock, Upload, 
   Settings, Loader2, Download, Copy, Check, ChevronRight, AlertTriangle, RefreshCw
 } from 'lucide-react';
-import { GoogleGenAI, Type, Modality, ThinkingLevel, LiveServerMessage } from '@google/genai';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 import { scanContentAI, reportModerationViolation } from '../lib/moderation';
-
-// Initialize live gemini client
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+import { ai, generateGeminiContent, generateGeminiContentFull, LiveClientSession } from '../lib/gemini';
 
 interface ChatMessage {
   id: string;
@@ -49,9 +46,9 @@ export default function AINotes() {
     {
       id: 'welcome',
       sender: 'model',
-      text: "Welcome to the Golden Minds Africa AI Center! Select a model or specialized role profile, and let's configure your strategic workspace.",
+      text: "Welcome to the Golden Minds Africa Research & Strategy Studio. Select an advisory mode or specialist profile to configure your workspace.",
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      modelUsed: 'gemini-3.1-pro-preview'
+      modelUsed: 'Executive Advisor'
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
@@ -216,7 +213,7 @@ export default function AINotes() {
       // 1. Content Moderation
       const moderation = await scanContentAI(dictatedText, 'Voice Dictation Note', user?.email || 'Fellow');
       if (moderation.flagged) {
-        toast.error(`Dictation blocked by AI Content Moderation: ${moderation.reason}. Violation reported.`);
+        toast.error(`Dictation blocked by Content Moderation: ${moderation.reason}. Violation reported.`);
         await reportModerationViolation('voice-dictation-' + Date.now(), 'Voice Dictation Note', 'Voice Dictation Note', user?.email || 'Fellow', dictatedText, moderation);
         setIsSavingDictation(false);
         return;
@@ -268,10 +265,10 @@ export default function AINotes() {
     setIsSaving(true);
     try {
       // 1. Content Moderation
-      const moderation = await scanContentAI(contentStr, 'Manual AI Note', user?.email || 'Fellow');
+      const moderation = await scanContentAI(contentStr, 'Manual Research Note', user?.email || 'Fellow');
       if (moderation.flagged) {
-        toast.error(`Content blocked by AI Content Moderation! Category: ${moderation.category}. Violation reported.`);
-        await reportModerationViolation('manual-note-' + Date.now(), 'Manual AI Note', 'Manual AI Note', user?.email || 'Fellow', contentStr, moderation);
+        toast.error(`Content blocked by Content Moderation! Category: ${moderation.category}. Violation reported.`);
+        await reportModerationViolation('manual-note-' + Date.now(), 'Manual Research Note', 'Manual Research Note', user?.email || 'Fellow', contentStr, moderation);
         setIsSaving(false);
         return;
       }
@@ -315,7 +312,7 @@ export default function AINotes() {
         Your role is to summarize complex inputs, transcribe, index academic sources, structure bibliographies, and ensure pristine conceptual mapping. 
         Present concepts clearly using structured layouts, bullet points, and clean syntax.`;
       default:
-        return 'You are an intelligent AI assistant for Golden Minds Africa Fellowship.';
+        return 'You are an executive advisor for Golden Minds Africa Fellowship.';
     }
   };
 
@@ -377,7 +374,7 @@ export default function AINotes() {
 
       // Thinking level parameter - ONLY available for Gemini 3 series, i.e. gemini-3.1-pro-preview
       if (thinkingMode && activeModelToUse === 'gemini-3.1-pro-preview') {
-        activeConfig.thinkingConfig = { thinkingLevel: ThinkingLevel.HIGH };
+        activeConfig.thinkingConfig = { thinkingLevel: 'HIGH' };
         // MaxOutputTokens must not be set when thinking mode is HIGH
       }
 
@@ -422,12 +419,12 @@ export default function AINotes() {
 
     } catch (err: any) {
       console.error(err);
-      toast.error('GenAI Query failed. Please check your credentials or API key.');
+      toast.error('Advisor query failed. Please try again shortly.');
       
       setChatMessages(prev => [...prev, {
         id: 'err-' + Date.now(),
         sender: 'model',
-        text: `Error invoking Gemini model: ${err.message || 'Operational failure'}.`,
+        text: `Error reaching advisory service: ${err.message || 'Operational failure'}.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]);
     } finally {
@@ -489,7 +486,7 @@ export default function AINotes() {
         if (textPart) {
           toast.warning(`Model returned response text instead of image bytes: ${textPart.text}`);
         } else {
-          toast.error("No image part returned from Gemini Image model.");
+          toast.error("No image part returned from Visual Brief Studio.");
         }
       }
 
@@ -516,7 +513,7 @@ export default function AINotes() {
     }
 
     setIsMediaAnalyzing(true);
-    setMediaAnalysisOutput("Processing media file and querying gemini-3.1-pro-preview for deep comprehension...");
+    setMediaAnalysisOutput("Processing media file for structured comprehension...");
 
     try {
       let mediaPart: any = null;
@@ -579,81 +576,67 @@ export default function AINotes() {
       source.connect(processorRef.current);
       processorRef.current.connect(audioContextRef.current.destination);
 
-      const sessionPromise = ai.live.connect({
-        model: "gemini-3.1-flash-live-preview",
-        config: {
-          responseModalities: [Modality.AUDIO],
-          speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName: liveVoice } }
-          },
-          systemInstruction: "You are an intelligent audio guide for Golden Minds Africa. Keep responses punchy, relevant, and inspiring.",
-          outputAudioTranscription: {},
-          inputAudioTranscription: {}
-        },
-        callbacks: {
-          onopen: () => {
-            setIsConnecting(false);
-            setIsRecording(true);
-            setLiveTranscript(prev => [...prev, "[Session Connected. Start speaking...]"]);
-            
-            processorRef.current!.onaudioprocess = (e) => {
+      const liveSession = new LiveClientSession({
+        onOpen: () => {
+          setIsConnecting(false);
+          setIsRecording(true);
+          setLiveTranscript(prev => [...prev, "[Session Connected. Start speaking...]"]);
+
+          if (processorRef.current) {
+            processorRef.current.onaudioprocess = (e) => {
               const inputData = e.inputBuffer.getChannelData(0);
               const pcm16 = new Int16Array(inputData.length);
               for (let i = 0; i < inputData.length; i++) {
                 pcm16[i] = Math.max(-32768, Math.min(32767, inputData[i] * 32768));
               }
               const base64Data = btoa(String.fromCharCode(...new Uint8Array(pcm16.buffer)));
-              
-              sessionPromise.then(session => {
-                session.sendRealtimeInput({
-                  audio: { data: base64Data, mimeType: 'audio/pcm;rate=16000' }
-                });
-              });
+              liveSession.sendRealtimeAudio(base64Data);
             };
-          },
-          onmessage: async (message: LiveServerMessage) => {
-            const base64Audio = message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
-            if (base64Audio) {
-              const binaryString = atob(base64Audio);
-              const bytes = new Uint8Array(binaryString.length);
-              for (let i = 0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-              }
-              const pcm16 = new Int16Array(bytes.buffer);
-              const float32 = new Float32Array(pcm16.length);
-              for (let i = 0; i < pcm16.length; i++) {
-                float32[i] = pcm16[i] / 32768.0;
-              }
-              playbackQueueRef.current.push(float32);
-              playNextAudio();
-            }
-
-            if (message.serverContent?.modelTurn?.parts[0]?.text) {
-              const chunkText = message.serverContent.modelTurn.parts[0].text;
-              setLiveTranscript(prev => {
-                const copy = [...prev];
-                if (copy.length > 0 && !copy[copy.length - 1].startsWith("AI: ")) {
-                  copy.push("AI: " + chunkText);
-                } else if (copy.length > 0) {
-                  copy[copy.length - 1] += chunkText;
-                } else {
-                  copy.push("AI: " + chunkText);
-                }
-                return copy;
-              });
-            }
-          },
-          onerror: (error) => {
-            console.error("Live API Error:", error);
-            stopLiveConversation();
-          },
-          onclose: () => {
-            stopLiveConversation();
           }
-        }
-      });
+        },
+        onMessage: (message: any) => {
+          const base64Audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
+          if (base64Audio) {
+            const binaryString = atob(base64Audio);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
+            }
+            const pcm16 = new Int16Array(bytes.buffer);
+            const float32 = new Float32Array(pcm16.length);
+            for (let i = 0; i < pcm16.length; i++) {
+              float32[i] = pcm16[i] / 32768.0;
+            }
+            playbackQueueRef.current.push(float32);
+            playNextAudio();
+          }
 
-      sessionRef.current = sessionPromise;
+          if (message.serverContent?.modelTurn?.parts?.[0]?.text) {
+            const chunkText = message.serverContent.modelTurn.parts[0].text;
+            setLiveTranscript(prev => {
+              const copy = [...prev];
+              if (copy.length > 0 && !copy[copy.length - 1].startsWith("Advisor: ")) {
+                copy.push("Advisor: " + chunkText);
+              } else if (copy.length > 0) {
+                copy[copy.length - 1] += chunkText;
+              } else {
+                copy.push("Advisor: " + chunkText);
+              }
+              return copy;
+            });
+          }
+        },
+        onError: (error) => {
+          console.error("Live API Error:", error);
+          stopLiveConversation();
+        },
+        onClose: () => {
+          stopLiveConversation();
+        }
+      }, liveVoice);
+
+      await liveSession.connect();
+      sessionRef.current = liveSession;
 
     } catch (error) {
       console.error("Error starting live: ", error);
@@ -690,8 +673,7 @@ export default function AINotes() {
       mediaStreamRef.current = null;
     }
     if (sessionRef.current) {
-      const session = await sessionRef.current;
-      session.close();
+      sessionRef.current.close();
       sessionRef.current = null;
     }
     setIsRecording(false);
@@ -717,7 +699,7 @@ export default function AINotes() {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         // Send base64 to gemini-3.5-flash
         setIsTranscribing(true);
-        setTranscriptionResult("Analyzing audio waveforms and transcribing using gemini-3.5-flash transcription engine...");
+        setTranscriptionResult("Analyzing audio waveforms and transcribing...");
         
         try {
           const reader = new FileReader();
@@ -793,16 +775,16 @@ export default function AINotes() {
             </span>
           </div>
           <h1 className="text-3xl md:text-5xl font-black font-serif tracking-tight text-gray-900">
-            Golden Minds Africa AI Center
+            Research &amp; Strategy Studio
           </h1>
           <p className="text-gray-600 font-mono text-xs uppercase tracking-widest mt-1">
-            Supercharged with Gemini 3 Pro reasoning, Maps, Search Grounding, and Audio Conversational capabilities
+            Executive reasoning, geographic context, web research, and live audio briefings
           </p>
         </div>
 
         {/* Saved Note helper snippet */}
         <div className="bg-white/90 backdrop-blur border border-[#cca568]/30 rounded-2xl p-4 shadow-sm flex items-center gap-3">
-          <Brain className="w-8 h-8 text-[#ff4e00] animate-pulse" />
+          <FileText className="w-8 h-8 text-[#ff4e00]" />
           <div className="text-xs">
             <p className="font-bold text-gray-800">Local Synced Vault</p>
             <p className="text-gray-500">{savedNotes.length} compiled session records</p>
@@ -820,8 +802,8 @@ export default function AINotes() {
               : 'text-gray-600 hover:text-black hover:bg-white/40'
           }`}
         >
-          <Bot className="w-4 h-4" />
-          Chatbot & Intel
+          <MessageSquare className="w-4 h-4" />
+          Executive Advisor
         </button>
 
         <button
@@ -833,7 +815,7 @@ export default function AINotes() {
           }`}
         >
           <ImageIcon className="w-4 h-4" />
-          Imagen Studio
+          Visual Brief Studio
         </button>
 
         <button
@@ -845,7 +827,7 @@ export default function AINotes() {
           }`}
         >
           <Mic className="w-4 h-4" />
-          Audio Sandbox
+          Audio Briefing Suite
         </button>
 
         <button
@@ -857,7 +839,7 @@ export default function AINotes() {
           }`}
         >
           <Layers className="w-4 h-4" />
-          Multimodal Lab
+          Document &amp; Media Lab
         </button>
       </div>
 
@@ -867,7 +849,7 @@ export default function AINotes() {
         <div className="lg:col-span-2 space-y-6">
           <AnimatePresence mode="wait">
             
-            {/* TAB 1: SMART AI CHATBOT ROOM */}
+            {/* TAB 1: EXECUTIVE ADVISOR */}
             {activeTab === 'chat' && (
               <motion.div
                 key="chat_tab"
@@ -877,10 +859,10 @@ export default function AINotes() {
                 className="bg-white rounded-3xl p-6 border border-[#cca568]/20 shadow-sm flex flex-col min-h-[550px]"
               >
                 {/* Chat Config Bar */}
-                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-150 pb-4 mb-4">
+                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 pb-4 mb-4">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-[#ff4e00]" />
-                    <span className="font-serif font-bold text-lg text-gray-800">Conversational Intelligence</span>
+                    <Compass className="w-5 h-5 text-[#ff4e00]" />
+                    <span className="font-serif font-bold text-lg text-gray-800">Executive Consultation</span>
                   </div>
 
                   {/* Mode Config presets / selector */}
@@ -891,9 +873,9 @@ export default function AINotes() {
                       disabled={searchGrounding || mapsGrounding}
                       className="bg-gray-50 border border-gray-300 rounded-xl px-2 py-1.5 text-xs font-mono font-medium focus:outline-none text-gray-700"
                     >
-                      <option value="gemini-3.1-pro-preview">Pro (gemini-3.1-pro-preview)</option>
-                      <option value="gemini-3.5-flash">Flash (gemini-3.5-flash)</option>
-                      <option value="gemini-3.1-flash-lite">Lite (gemini-3.1-flash-lite)</option>
+                      <option value="gemini-3.1-pro-preview">Deep Reasoning (Executive)</option>
+                      <option value="gemini-3.5-flash">Standard (Balanced)</option>
+                      <option value="gemini-3.1-flash-lite">Rapid (Concise)</option>
                     </select>
 
                     <select
@@ -902,7 +884,7 @@ export default function AINotes() {
                       className="bg-gray-50 border border-gray-300 rounded-xl px-2 py-1.5 text-xs font-mono font-medium focus:outline-none text-gray-700"
                     >
                       <option value="mentor">Senior Fellowship Mentor</option>
-                      <option value="venture">Venture & Tech Coach</option>
+                      <option value="venture">Venture &amp; Tech Coach</option>
                       <option value="archivist">Legacy Archivist</option>
                     </select>
                   </div>
@@ -924,9 +906,9 @@ export default function AINotes() {
                     <div className="text-xs">
                       <p className="font-bold flex items-center gap-1">
                         <Globe className="w-3.5 h-3.5 text-blue-500" />
-                        Search Grounding
+                        Web Research
                       </p>
-                      <p className="text-[10px] text-gray-500 font-mono">Forces gemini-3.5-flash</p>
+                      <p className="text-[10px] text-gray-500 font-mono">Live source citations</p>
                     </div>
                   </label>
 
@@ -943,9 +925,9 @@ export default function AINotes() {
                     <div className="text-xs">
                       <p className="font-bold flex items-center gap-1">
                         <MapPin className="w-3.5 h-3.5 text-emerald-500" />
-                        Maps Grounding
+                        Regional Context
                       </p>
-                      <p className="text-[10px] text-gray-500 font-mono">Forces local coordinate tools</p>
+                      <p className="text-[10px] text-gray-500 font-mono">Local coordinate tools</p>
                     </div>
                   </label>
 
@@ -959,17 +941,17 @@ export default function AINotes() {
                     />
                     <div className="text-xs">
                       <p className="font-bold flex items-center gap-1">
-                        <Brain className="w-3.5 h-3.5 text-purple-500" />
-                        Deep Thinking Mode
+                        <Compass className="w-3.5 h-3.5 text-purple-500" />
+                        Deep Reasoning Mode
                       </p>
-                      <p className="text-[10px] text-gray-500 font-mono">ThinkLevel: HIGH (Pro only)</p>
+                      <p className="text-[10px] text-gray-500 font-mono">Extended policy analysis</p>
                     </div>
                   </label>
 
                 </div>
 
                 {/* Scrollable Chat Message Tree */}
-                <div className="flex-1 min-h-[280px] max-h-[450px] overflow-y-auto space-y-4 bg-gray-50 rounded-2xl p-4 border border-gray-150 mb-4 flex flex-col">
+                <div className="flex-1 min-h-[280px] max-h-[450px] overflow-y-auto space-y-4 bg-gray-50 rounded-2xl p-4 border border-gray-200 mb-4 flex flex-col">
                   {chatMessages.map((msg) => (
                     <div
                       key={msg.id}
@@ -982,8 +964,8 @@ export default function AINotes() {
                       {/* Message header */}
                       <div className="flex items-center justify-between gap-4 mb-2 opacity-70 text-[10px] font-mono uppercase tracking-wider">
                         <span className="font-bold flex items-center gap-1">
-                          {msg.sender === 'user' ? <User className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
-                          {msg.sender === 'user' ? 'Fellow' : 'System ' + (msg.modelUsed || '')}
+                          {msg.sender === 'user' ? <User className="w-3 h-3" /> : <MessageSquare className="w-3 h-3" />}
+                          {msg.sender === 'user' ? 'Fellow' : 'Executive Advisor'}
                         </span>
                         <span>{msg.timestamp}</span>
                       </div>
@@ -992,9 +974,9 @@ export default function AINotes() {
 
                       {/* Display search grounded references */}
                       {msg.searchGroundingSources && msg.searchGroundingSources.length > 0 && (
-                        <div className="mt-3 border-t border-gray-150 pt-2 space-y-1">
+                        <div className="mt-3 border-t border-gray-200 pt-2 space-y-1">
                           <p className="text-[10px] font-bold text-blue-600 font-mono flex items-center gap-1">
-                            <Globe className="w-3 h-3" /> Search Grounding Results:
+                            <Globe className="w-3 h-3" /> Web Research Sources:
                           </p>
                           <div className="flex flex-wrap gap-1.5">
                             {msg.searchGroundingSources.map((src, i) => (
@@ -1014,9 +996,9 @@ export default function AINotes() {
 
                       {/* Display maps grounding references */}
                       {msg.mapsGroundingSources && msg.mapsGroundingSources.length > 0 && (
-                        <div className="mt-3 border-t border-gray-150 pt-2 space-y-1">
+                        <div className="mt-3 border-t border-gray-200 pt-2 space-y-1">
                           <p className="text-[10px] font-bold text-emerald-600 font-mono flex items-center gap-1">
-                            <MapPin className="w-3 h-3" /> Google Maps Grounding Sources:
+                            <MapPin className="w-3 h-3" /> Regional Location Sources:
                           </p>
                           <div className="space-y-1">
                             {msg.mapsGroundingSources.map((src, i) => (
@@ -1037,17 +1019,17 @@ export default function AINotes() {
                       {/* Display deep thinking indicators */}
                       {msg.thinking && (
                         <div className="mt-3 bg-purple-50 p-2.5 rounded-xl border border-purple-100 text-[11px] text-purple-700 font-mono italic">
-                          💡 Think Mode: {msg.thinking}
+                          Analytical Path: {msg.thinking}
                         </div>
                       )}
                     </div>
                   ))}
 
                   {isChatSending && (
-                    <div className="bg-white border border-gray-150 rounded-2xl p-4 self-start flex items-center gap-3 shadow-sm">
+                    <div className="bg-white border border-gray-200 rounded-2xl p-4 self-start flex items-center gap-3 shadow-sm">
                       <Loader2 className="w-4 h-4 animate-spin text-[#ff4e00]" />
                       <span className="text-xs text-gray-500 font-mono">
-                        {thinkingMode ? 'Pro model is reasoning at HIGH scale...' : 'Synthesizing response...'}
+                        {thinkingMode ? 'Conducting deep strategic analysis...' : 'Synthesizing response...'}
                       </span>
                     </div>
                   )}
@@ -1094,15 +1076,15 @@ export default function AINotes() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="bg-zinc-900 text-white rounded-3xl p-6 border border-zinc-805 shadow-xl space-y-6"
+                className="bg-zinc-900 text-white rounded-3xl p-6 border border-zinc-800 shadow-xl space-y-6"
               >
                 <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
                   <div className="flex items-center gap-2">
                     <ImageIcon className="w-5 h-5 text-[#ff4e00]" />
-                    <span className="font-serif font-bold text-lg text-white">Imagen Generative Studio</span>
+                    <span className="font-serif font-bold text-lg text-white">Visual Brief Studio</span>
                   </div>
                   <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest bg-zinc-800 px-3 py-1 rounded-full">
-                    Imagen-4.0 / Gemini Image engine
+                    Media Synthesis
                   </span>
                 </div>
 
@@ -1112,19 +1094,19 @@ export default function AINotes() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     
                     <div className="space-y-1">
-                      <label className="text-xs font-mono text-gray-400">Target Model</label>
+                      <label className="text-xs font-mono text-gray-400">Quality Preset</label>
                       <select
                         value={imageModel}
                         onChange={(e: any) => setImageModel(e.target.value)}
                         className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#ff4e00]"
                       >
-                        <option value="gemini-3-pro-image-preview">Studio Quality (gemini-3-pro-image-preview)</option>
-                        <option value="gemini-3.1-flash-image-preview">High-Speed (gemini-3.1-flash-image-preview)</option>
+                        <option value="gemini-3-pro-image-preview">Studio Quality (High Detail)</option>
+                        <option value="gemini-3.1-flash-image-preview">Rapid Draft (Standard)</option>
                       </select>
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-xs font-mono text-gray-450">Aspect Ratio</label>
+                      <label className="text-xs font-mono text-gray-400">Aspect Ratio</label>
                       <select
                         value={imageAspectRatio}
                         onChange={(e) => setImageAspectRatio(e.target.value)}
@@ -1142,7 +1124,7 @@ export default function AINotes() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-xs font-mono text-gray-450">Resolution (Image Size)</label>
+                      <label className="text-xs font-mono text-gray-400">Resolution (Image Size)</label>
                       <select
                         value={imageSize}
                         onChange={(e: any) => setImageSize(e.target.value)}
@@ -1177,11 +1159,11 @@ export default function AINotes() {
 
                   {/* Prompt Text input */}
                   <div className="space-y-1">
-                    <label className="text-xs font-mono text-gray-400">Creative prompt formulation</label>
+                    <label className="text-xs font-mono text-gray-400">Visual Brief Description</label>
                     <textarea
                       value={imagePrompt}
                       onChange={(e) => setImagePrompt(e.target.value)}
-                      placeholder="e.g. 'A futuristic smart city in Africa featuring high-tech solar energy hubs and beautiful botanical gardens, 3d render, award winning cinematography'"
+                      placeholder="e.g. 'A futuristic smart city in Africa featuring high-tech solar energy hubs and architectural botanical gardens'"
                       required
                       className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 text-xs placeholder-zinc-500 text-white min-h-[90px] focus:outline-none focus:border-[#ff4e00] resize-none"
                     />
@@ -1190,7 +1172,7 @@ export default function AINotes() {
                   <button
                     type="submit"
                     disabled={isGeneratingImage || !imagePrompt.trim()}
-                    className="w-full py-3.5 bg-gradient-to-r from-red-650 to-[#ff4e00] text-white hover:from-red-700 hover:to-[#e64600] font-bold text-sm tracking-wide rounded-2xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full py-3.5 bg-gradient-to-r from-red-600 to-[#ff4e00] text-white hover:from-red-700 hover:to-[#e64600] font-bold text-sm tracking-wide rounded-2xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {isGeneratingImage ? (
                       <>
@@ -1199,8 +1181,8 @@ export default function AINotes() {
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-4 h-4" />
-                        {editingImageUrl ? "Update Anchor & Regenerate" : "Invoke Imagen Studio Pipeline"}
+                        <ImageIcon className="w-4 h-4" />
+                        {editingImageUrl ? "Update Anchor & Regenerate" : "Generate Visual Asset"}
                       </>
                     )}
                   </button>
@@ -1211,10 +1193,10 @@ export default function AINotes() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-zinc-800">
                   {generatedImages.length > 0 ? (
                     generatedImages.map((img, i) => (
-                      <div key={i} className="bg-zinc-850 rounded-2xl p-3 border border-zinc-850 flex flex-col space-y-3 shadow">
+                      <div key={i} className="bg-zinc-800 rounded-2xl p-3 border border-zinc-800 flex flex-col space-y-3 shadow">
                         <img
                           src={img}
-                          alt={`Generated AI item ${i}`}
+                          alt={`Generated visual asset ${i}`}
                           referrerPolicy="no-referrer"
                           className="w-full object-cover rounded-xl border border-zinc-800 h-64"
                         />
@@ -1223,14 +1205,14 @@ export default function AINotes() {
                           <div className="flex gap-2">
                             <a
                               href={img}
-                              download={`goldenminds-ai-image-${i}.png`}
+                              download={`goldenminds-visual-${i}.png`}
                               className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-white"
                               title="Download to system"
                             >
                               <Download className="w-3.5 h-3.5" />
                             </a>
                             <button
-                              onClick={() => handleSaveToDb(`Generated graphic asset in AINotes gallery. Size: ${imageSize}. Prompt: ${imagePrompt}`)}
+                              onClick={() => handleSaveToDb(`Generated graphic asset in Research Studio gallery. Size: ${imageSize}. Prompt: ${imagePrompt}`)}
                               className="px-3 py-1 bg-[#ff4e00] rounded-lg font-bold"
                             >
                               Save to Vault
@@ -1241,8 +1223,8 @@ export default function AINotes() {
                     ))
                   ) : (
                     <div className="md:col-span-2 h-48 flex flex-col items-center justify-center text-center text-zinc-500 border border-dashed border-zinc-800 rounded-3xl">
-                      <ImageIcon className="w-10 h-10 mb-2 opacity-50 text-zinc-550" />
-                      <p className="text-xs">No media generated yet. Submit your prompt above.</p>
+                      <ImageIcon className="w-10 h-10 mb-2 opacity-50 text-zinc-500" />
+                      <p className="text-xs">No media generated yet. Submit your brief above.</p>
                     </div>
                   )}
                 </div>
@@ -1250,7 +1232,7 @@ export default function AINotes() {
               </motion.div>
             )}
 
-            {/* TAB 3: AUDIO & TRANSCRIPTION SANDBOX */}
+            {/* TAB 3: AUDIO & TRANSCRIPTION SUITE */}
             {activeTab === 'audio' && (
               <motion.div
                 key="audio_tab"
@@ -1262,10 +1244,10 @@ export default function AINotes() {
                 <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
                   <div className="flex items-center gap-2">
                     <Mic className="w-5 h-5 text-[#ff4e00]" />
-                    <span className="font-serif font-bold text-lg">Interactive Audio & Transcription Suite</span>
+                    <span className="font-serif font-bold text-lg">Interactive Audio &amp; Transcription Suite</span>
                   </div>
                   <span className="text-[10px] font-mono hover:text-[#ff7f24] text-zinc-400 bg-zinc-900 px-3 py-1 rounded-full uppercase tracking-wider">
-                    Audio Sandbox / Gemini-3.1-flash-live-preview
+                    Live Audio Briefing
                   </span>
                 </div>
 
@@ -1273,9 +1255,9 @@ export default function AINotes() {
                   
                   {/* Left Column: Real-time Live Voice Conversation */}
                   <div className="bg-[#151619] border border-zinc-800 rounded-2xl p-6 flex flex-col items-center justify-center text-center space-y-4">
-                    <p className="font-serif font-bold text-md text-[#cca568]">Interactive Live Conversation</p>
+                    <p className="font-serif font-bold text-md text-[#cca568]">Interactive Live Briefing</p>
                     <p className="text-[10px] text-gray-400 max-w-xs">
-                      Engage in low-latency voice conversations using gemini-3.1-flash-live-preview model. Talk naturally with the AI guide in real-time.
+                      Engage in low-latency voice briefings in real time. Speak naturally with the fellowship guide.
                     </p>
 
                     <div className="flex items-center gap-2 bg-zinc-800 p-2 rounded-xl border border-zinc-700 text-xs w-full max-w-xs justify-between">
@@ -1326,7 +1308,7 @@ export default function AINotes() {
 
                     {/* Live transcripts logger */}
                     {liveTranscript.length > 0 && (
-                      <div className="w-full bg-black rounded-xl p-3 text-left border border-zinc-850 max-h-40 overflow-y-auto font-mono text-[10px] space-y-1.5 text-zinc-400">
+                      <div className="w-full bg-black rounded-xl p-3 text-left border border-zinc-800 max-h-40 overflow-y-auto font-mono text-[10px] space-y-1.5 text-zinc-400">
                         {liveTranscript.map((t, idx) => (
                           <p key={idx}>{t}</p>
                         ))}
@@ -1334,16 +1316,16 @@ export default function AINotes() {
                     )}
                   </div>
 
-                  {/* Right Column: Audio Transcript Generator (gemini-3.5-flash) */}
+                  {/* Right Column: Audio Transcript Generator */}
                   <div className="bg-[#151619] border border-zinc-800 rounded-2xl p-6 flex flex-col justify-between space-y-4">
                     <div className="space-y-2">
                       <p className="font-serif font-bold text-md text-[#cca568]">Verbatim Audio Transcription Tool</p>
                       <p className="text-[10px] text-gray-400">
-                        Record vocal memos, course directives, or policy ideas. We will use model <strong className="text-white">gemini-3.5-flash</strong> to deliver a highly structured word-for-word transcript.
+                        Record vocal memos, course directives, or policy ideas to receive a clean word-for-word transcript.
                       </p>
                     </div>
 
-                    <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-850 min-h-36 max-h-48 overflow-y-auto text-xs font-mono text-zinc-350 whitespace-pre-wrap">
+                    <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800 min-h-36 max-h-48 overflow-y-auto text-xs font-mono text-zinc-300 whitespace-pre-wrap">
                       {isTranscribing ? (
                         <div className="flex items-center gap-2">
                           <Loader2 className="w-4 h-4 animate-spin text-[#ff4e00]" />
@@ -1352,7 +1334,7 @@ export default function AINotes() {
                       ) : transcriptionResult ? (
                         transcriptionResult
                       ) : (
-                        <span className="text-zinc-650">Awaiting audio input segment transcription...</span>
+                        <span className="text-zinc-500">Awaiting audio input segment transcription...</span>
                       )}
                     </div>
 
@@ -1360,7 +1342,7 @@ export default function AINotes() {
                       <button
                         onClick={isRecordingTranscription ? stopTranscriptionRecording : startTranscriptionRecording}
                         className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
-                          isRecordingTranscription ? 'bg-red-600 text-white animate-pulse' : 'bg-zinc-850 hover:bg-zinc-750 text-white border border-zinc-700'
+                          isRecordingTranscription ? 'bg-red-600 text-white animate-pulse' : 'bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700'
                         }`}
                       >
                         {isRecordingTranscription ? (
@@ -1532,7 +1514,7 @@ export default function AINotes() {
                       onChange={(e) => setMediaPrompt(e.target.value)}
                       placeholder={
                         mediaTab === 'image'
-                          ? "e.g. Identify design motifs, cultural metaphors, or transcribe diagram texts in detail using gemini-3.1-pro-preview"
+                          ? "e.g. Identify design motifs, cultural metaphors, or transcribe diagram texts in detail"
                           : "e.g. Summarize the video topics, list important frameworks, or provide minute-by-minute timeline indexing"
                       }
                       className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-xs text-gray-800 focus:outline-none focus:border-[#ff4e00] resize-none min-h-[85px]"
@@ -1547,12 +1529,12 @@ export default function AINotes() {
                     {isMediaAnalyzing ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Analyzing via gemini-3.1-pro-preview...
+                        Analyzing media file...
                       </>
                     ) : (
                       <>
-                        <Brain className="w-4 h-4" />
-                        Launch Multimodal Analysis
+                        <FileText className="w-4 h-4" />
+                        Launch Media Analysis
                       </>
                     )}
                   </button>
@@ -1563,15 +1545,15 @@ export default function AINotes() {
                 {mediaAnalysisOutput && (
                   <div className="mt-4 bg-[#fbfbf6] border border-[#cca568]/20 rounded-2xl p-5 space-y-3">
                     <div className="flex justify-between items-center pb-2 border-b border-[#cca568]/15">
-                      <p className="font-serif font-bold text-sm text-[#604a22]">AI Multimodal Insights Output</p>
+                      <p className="font-serif font-bold text-sm text-[#604a22]">Document &amp; Media Analysis Output</p>
                       <button
-                        onClick={() => handleSaveToDb(`Multimodal Lab analysis report: ${mediaAnalysisOutput}`)}
+                        onClick={() => handleSaveToDb(`Media analysis report: ${mediaAnalysisOutput}`)}
                         className="text-xs text-[#ff4e00] hover:text-[#e64600] font-bold font-mono"
                       >
                         Save Analysis Report
                       </button>
                     </div>
-                    <div className="text-xs text-gray-750 font-mono leading-relaxed whitespace-pre-wrap max-h-72 overflow-y-auto">
+                    <div className="text-xs text-gray-700 font-mono leading-relaxed whitespace-pre-wrap max-h-72 overflow-y-auto">
                       {mediaAnalysisOutput}
                     </div>
                   </div>
@@ -1600,7 +1582,7 @@ export default function AINotes() {
           </div>
 
           <p className="text-[11px] text-gray-500 font-mono leading-snug uppercase">
-            Captured AI records, designs, diagrams and transcripts persisted dynamically to Supabase records.
+            Captured research notes, diagrams and transcripts synced to your fellowship vault.
           </p>
 
           {/* Web Speech Dictation UI */}
@@ -1621,8 +1603,8 @@ export default function AINotes() {
             <textarea
               value={dictatedText}
               onChange={(e) => setDictatedText(e.target.value)}
-              placeholder="Start dictation during a lecture or mentorship session. We will auto-categorize the academic topic with Gemini and save."
-              className="w-full h-24 text-xs p-2.5 bg-white border border-gray-250 rounded-xl resize-none focus:outline-none focus:border-[#ff4e00] text-gray-800"
+              placeholder="Start dictation during a lecture or mentorship session to auto-categorize the academic topic and save."
+              className="w-full h-24 text-xs p-2.5 bg-white border border-gray-200 rounded-xl resize-none focus:outline-none focus:border-[#ff4e00] text-gray-800"
             />
 
             <div className="flex justify-between gap-2">
@@ -1680,10 +1662,10 @@ export default function AINotes() {
               </div>
             ) : savedNotes.length > 0 ? (
               savedNotes.map((note) => (
-                <div key={note.id} className="bg-gray-50 rounded-2xl p-4 border border-gray-150 group space-y-2 relative">
+                <div key={note.id} className="bg-gray-50 rounded-2xl p-4 border border-gray-200 group space-y-2 relative">
                   <div className="flex justify-between items-start">
                     <span className="text-[10px] bg-[#cca568]/10 text-[#604a22] font-mono px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                      {(note.tags && note.tags[0]) || 'AI Record'}
+                      {(note.tags && note.tags[0]) || 'Research Note'}
                     </span>
                     <div className="flex gap-2">
                       <button 
@@ -1707,7 +1689,7 @@ export default function AINotes() {
               ))
             ) : (
               <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
-                <FileImage className="w-8 h-8 text-gray-350 mx-auto mb-2 opacity-50" />
+                <FileImage className="w-8 h-8 text-gray-300 mx-auto mb-2 opacity-50" />
                 <p className="text-xs text-gray-500">Your synced knowledge outputs appear here.</p>
               </div>
             )}

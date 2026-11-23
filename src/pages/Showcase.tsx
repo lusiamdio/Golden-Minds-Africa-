@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Search, Filter, Globe, ExternalLink, Award, Users, Star, ArrowRight, Sparkles } from 'lucide-react';
+import { Search, Filter, Globe, ExternalLink, Award, Users, Star, ArrowRight, Compass } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const MOCK_SHOWCASE = [];
@@ -41,7 +41,7 @@ export default function Showcase() {
               />
             </div>
             <button className="bg-[#C9A646] hover:bg-[#b8972e] text-[#0A1F44] px-8 py-4 rounded-xl font-bold transition-colors whitespace-nowrap flex items-center justify-center gap-2 w-full sm:w-auto">
-              <Sparkles className="w-5 h-5" /> Discover
+              <Compass className="w-5 h-5" /> Discover
             </button>
           </div>
         </div>

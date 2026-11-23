@@ -66,7 +66,7 @@ function ProjectsMain() {
                   <Target className="w-6 h-6" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Idea Validation</h3>
-                <p className="text-gray-500 text-sm mb-4">Use AI to analyze market gaps, test assumptions, and refine your core value proposition.</p>
+                <p className="text-gray-500 text-sm mb-4">Analyze market gaps, test assumptions, and refine your core value proposition.</p>
               </div>
               <button 
                 onClick={() => navigate('/projects/validation/start')}

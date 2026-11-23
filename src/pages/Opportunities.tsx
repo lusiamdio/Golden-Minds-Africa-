@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { useNavigate, Routes, Route } from 'react-router-dom';
-import { Briefcase, GraduationCap, DollarSign, Mic, Sparkles, ExternalLink, Search, Filter } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+import { Briefcase, GraduationCap, DollarSign, Mic, Award, Compass, ExternalLink, Search, Filter, Loader2 } from 'lucide-react';
+import Markdown from 'react-markdown';
+import { ai } from '../lib/gemini';
 
 const MOCK_OPPORTUNITIES = [];
 
@@ -19,7 +18,7 @@ function OpportunitiesMain() {
   const handleGetRecommendations = async () => {
     setIsAnalyzing(true);
     try {
-      const prompt = `Act as an AI career advisor for an African leadership fellowship. 
+      const prompt = `Act as a career advisor for an African leadership fellowship. 
       Based on a fellow's interest in "Policy, Governance, and Tech Entrepreneurship", 
       recommend 2 specific types of opportunities they should pursue and why. 
       Keep it brief, encouraging, and actionable.`;
@@ -31,7 +30,7 @@ function OpportunitiesMain() {
       setAiRecommendation(response.text || 'Recommendation generation failed.');
     } catch (error) {
       console.error('Error generating recommendations:', error);
-      setAiRecommendation('Unable to connect to AI Assistant.');
+      setAiRecommendation('Unable to connect to Career Advisory service.');
     } finally {
       setIsAnalyzing(false);
     }
@@ -50,7 +49,7 @@ function OpportunitiesMain() {
       case 'grant': return <DollarSign className="w-5 h-5 text-green-500" />;
       case 'internship': return <Briefcase className="w-5 h-5 text-purple-500" />;
       case 'speaking': return <Mic className="w-5 h-5 text-orange-500" />;
-      case 'startup': return <Sparkles className="w-5 h-5 text-yellow-500" />;
+      case 'startup': return <Award className="w-5 h-5 text-yellow-500" />;
       default: return <Briefcase className="w-5 h-5 text-gray-500" />;
     }
   };
@@ -65,10 +64,10 @@ function OpportunitiesMain() {
         <button 
           onClick={handleGetRecommendations}
           disabled={isAnalyzing}
-          className="flex items-center justify-center gap-2 bg-[#022c22] text-white px-5 py-2.5 rounded-full shadow-md hover:bg-[#064e3b] transition-colors disabled:opacity-70 w-full md:w-auto"
+          className="flex items-center justify-center gap-2 bg-[#022c22] text-white px-5 py-2.5 rounded-full shadow-md hover:bg-[#064e3b] transition-colors disabled:opacity-70 w-full md:w-auto cursor-pointer"
         >
-          {isAnalyzing ? <Sparkles className="w-4 h-4 animate-pulse" /> : <Sparkles className="w-4 h-4 text-[#d4af37]" />}
-          <span className="text-sm font-bold">AI Matchmaker</span>
+          {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Compass className="w-4 h-4 text-[#d4af37]" />}
+          <span className="text-sm font-bold">Opportunity Advisor</span>
         </button>
       </div>
 
@@ -79,10 +78,10 @@ function OpportunitiesMain() {
           className="bg-emerald-50 border border-emerald-100 rounded-2xl p-6 shadow-sm"
         >
           <div className="flex items-center gap-2 text-emerald-800 font-bold mb-3">
-            <Sparkles className="w-5 h-5" /> AI Career Insights
+            <Compass className="w-5 h-5" /> Career Pathway Insights
           </div>
           <div className="prose prose-sm prose-emerald max-w-none text-emerald-900">
-            <div dangerouslySetInnerHTML={{ __html: aiRecommendation.replace(/\n/g, '<br/>') }} />
+            <Markdown>{aiRecommendation}</Markdown>
           </div>
         </motion.div>
       )}
@@ -128,7 +127,7 @@ function OpportunitiesMain() {
                 {getIcon(opp.type)}
               </div>
               <div className="bg-green-50 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
-                <Sparkles className="w-3 h-3" /> {opp.match}% Match
+                <Award className="w-3 h-3" /> {opp.match}% Match
               </div>
             </div>
             <h3 className="font-bold font-serif text-xl mb-1 text-gray-900">{opp.title}</h3>

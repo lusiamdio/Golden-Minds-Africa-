@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Calendar as CalendarIcon, Clock, MapPin, Users, Video, Sparkles, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
+import { Calendar as CalendarIcon, Clock, MapPin, Users, Video, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ai } from '../lib/gemini';
 import { Badge } from '@/components/ui/badge';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const MOCK_EVENTS = [];
 
@@ -43,7 +41,7 @@ export default function Calendar() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-serif font-bold text-gray-900 dark:text-white">Smart Calendar</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-2">Manage your fellowship schedule and get AI-powered time management insights.</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">Manage your fellowship schedule and get smart time management insights.</p>
         </div>
         <button className="bg-[#ff4e00] hover:bg-[#ff6a00] text-white px-4 py-2 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors w-full sm:w-auto">
           <Plus className="w-5 h-5" /> New Event
@@ -112,16 +110,16 @@ export default function Calendar() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* AI Assistant */}
+          {/* Schedule Assistant */}
           <div className="bg-gradient-to-br from-[#ff4e00]/10 to-purple-600/10 border border-[#ff4e00]/20 rounded-2xl p-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-[#ff4e00]/10 rounded-full blur-3xl" />
             
             <div className="flex items-center gap-3 mb-4 relative z-10">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#ff4e00] to-[#ff6a00] flex items-center justify-center text-white shadow-lg">
-                <Sparkles className="w-5 h-5" />
+                <Clock className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-gray-900 dark:text-white">AI Schedule Assistant</h3>
+                <h3 className="font-bold text-gray-900 dark:text-white">Schedule Assistant</h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Optimize your time</p>
               </div>
             </div>

@@ -321,7 +321,7 @@ const DEFAULT_FELLOW_CONTENT: FellowContent[] = [
     fellowEmail: 'sani.bello@gmail.com',
     contentType: 'AI Note',
     title: 'Key Policy Directives on AU Agenda 2063 Chapter 4',
-    excerpt: 'Summarized focus points on resource mobilization and private partnerships captured via AI Companion during the core research plenary last Tuesday.',
+    excerpt: 'Summarized focus points on resource mobilization and private partnerships captured via Executive Companion during the core research plenary last Tuesday.',
     timestamp: '2026-06-12 14:15',
     status: 'Active'
   }
@@ -889,7 +889,7 @@ export const AdminStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     (async () => {
       try {
-        toast.loading('Analyzing content integrity with AI...', { id: 'moderation-scan-active' });
+        toast.loading('Reviewing content integrity...', { id: 'moderation-scan-active' });
         const scanResult = await scanContentAI(`${title} ${excerpt}`, title, fellowName);
         toast.dismiss('moderation-scan-active');
         
@@ -897,7 +897,7 @@ export const AdminStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           newItem.status = 'Flagged';
           setFellowContents(prev => [newItem, ...prev]);
           await reportModerationViolation(newItem.id, newItem.contentType, newItem.title, newItem.fellowName, newItem.excerpt, scanResult);
-          toast.warning(`Content submitted, but flagged for review by AI moderator: "${scanResult.reason}"`, {
+          toast.warning(`Content submitted, but flagged for review by content moderator: "${scanResult.reason}"`, {
             duration: 5000
           });
         } else {

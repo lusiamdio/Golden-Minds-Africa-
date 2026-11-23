@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
@@ -15,7 +15,13 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const isSuperAdminUser = user && user.email === 'simao@neurogrowthlabs.co.za';
   const isAuthorized = isSessionAuth || isSuperAdminUser;
 
-  // If super admin session token already exists in sessionStorage, pass through immediately with zero lag
+  useEffect(() => {
+    if (!loading && !isAuthorized && user) {
+      toast.error("Unauthorized Access: Super Admin credentials required.");
+    }
+  }, [loading, isAuthorized, user]);
+
+  // If super admin session token already exists in sessionStorage, pass through immediately
   if (isAuthorized) {
     return <>{children}</>;
   }
@@ -31,12 +37,6 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  // If a standard fellow (user exists but is not Simao) attempts to access /admin
-  if (user && user.email !== 'simao@neurogrowthlabs.co.za') {
-    // Prevent standard fellows from seeing admin dashboard
-    toast.error("Unauthorized Access: Super Admin credentials required.");
-    return <Navigate to="/" replace />;
-  }
-
-  return <>{children}</>;
+  // Block unauthenticated users and non-admin fellows from accessing /admin
+  return <Navigate to="/" replace />;
 }

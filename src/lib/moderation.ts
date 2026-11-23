@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { generateGeminiContent } from './gemini';
 import { supabase } from './supabase';
 
 export interface ModerationResult {
@@ -6,21 +6,6 @@ export interface ModerationResult {
   reason: string;
   confidence: number; // between 0 and 1
   category: 'Hate Speech' | 'Harassment' | 'Unprofessional language' | 'Spam/Scam' | 'None';
-}
-
-// Lazy initializer for Google Gen AI to prevent load-time crash
-let aiInstance: GoogleGenAI | null = null;
-
-function getAIClient(): GoogleGenAI {
-  if (!aiInstance) {
-    const key = process.env.GEMINI_API_KEY;
-    if (!key) {
-      console.warn('GEMINI_API_KEY is not defined in the environment. AI moderation of content fell back to keyword matching.');
-      throw new Error('GEMINI_API_KEY is required for AI content moderation.');
-    }
-    aiInstance = new GoogleGenAI({ apiKey: key });
-  }
-  return aiInstance;
 }
 
 /**
@@ -62,7 +47,6 @@ export async function scanContentAI(
   }
 
   try {
-    const ai = getAIClient();
     const systemPrompt = `You are a compliance scanning agent for Golden Minds Africa, a premium, high-integrity Pan-African leadership fellowship circle.
 Your goal is to scan fellow-generated forum posts, notes, and chat messages against community guidelines.
 Identify any violations of:
@@ -86,16 +70,15 @@ Content Text: "${text}"
 
 Scan the content and output the JSON moderation block:`;
 
-    const response = await ai.models.generateContent({
+    const outputText = await generateGeminiContent({
       model: 'gemini-2.5-flash',
       contents: userPrompt,
+      systemInstruction: systemPrompt,
       config: {
-        systemInstruction: systemPrompt,
         responseMimeType: 'application/json'
       }
     });
 
-    const outputText = response.text?.trim() || '';
     if (!outputText) {
       return defaultResult;
     }
@@ -142,9 +125,9 @@ export async function reportModerationViolation(
     const newReport = {
       id: `rep-ai-${Date.now()}`,
       targetName: authorName,
-      reporterName: `AI-Powered Moderation Service`,
+      reporterName: `Content Moderation Service`,
       description: `AUTOMATED SYSTEM REPORT: Flagged ${contentType} titled "${title}". Category: [${result.category}]. Confidence: ${(result.confidence * 100).toFixed(0)}%. Reason: ${result.reason}`,
-      channel: `Content Auto-Moderator [${contentType}]`,
+      channel: `Content Moderator [${contentType}]`,
       timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
       status: 'Pending' as const
     };
@@ -156,7 +139,7 @@ export async function reportModerationViolation(
     const audits = savedAudits ? JSON.parse(savedAudits) : [];
     const newAudit = {
       id: `l-ai-${Date.now()}`,
-      adminName: 'AI Guardian Service',
+      adminName: 'Moderation Desk',
       action: `Auto-flagged content item: ${title} (Confidence: ${(result.confidence * 100).toFixed(0)}%)`,
       target: contentId,
       timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),

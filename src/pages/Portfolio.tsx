@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Briefcase, FileText, Award, Download, Share2, Globe, ExternalLink, Edit3, CheckCircle2, Sparkles, X } from 'lucide-react';
+import { Briefcase, FileText, Award, Download, Share2, Globe, ExternalLink, Edit3, CheckCircle2, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { GoogleGenAI } from '@google/genai';
+import { ai } from '../lib/gemini';
 import { Routes, Route, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import { toast } from 'sonner';
 import Markdown from 'react-markdown';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 function PortfolioOverview() {
   const navigate = useNavigate();
@@ -40,7 +38,7 @@ function PortfolioOverview() {
         
         <div className="bg-emerald-50 rounded-2xl p-4 sm:p-6 mb-8 text-left">
           <h3 className="font-bold text-[#022c22] mb-4 flex items-center gap-2 text-sm sm:text-base">
-            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
+            <Award className="w-4 h-4 sm:w-5 sm:h-5" />
             Current Status Snapshot
           </h3>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -145,7 +143,7 @@ This policy review advocates for localized algorithmic frameworks. Current mains
       setPortfolioSummary(response.text || 'Summary generation failed.');
     } catch (error) {
       console.error('Error generating summary:', error);
-      setPortfolioSummary('Unable to connect to AI Assistant.');
+      setPortfolioSummary('Unable to generate summary at this time.');
     } finally {
       setIsGeneratingSummary(false);
     }
@@ -301,7 +299,7 @@ This policy review advocates for localized algorithmic frameworks. Current mains
             onClick={() => navigate('/portfolio/overview')}
             className="bg-[#d4af37] hover:bg-[#b8972e] text-[#022c22] px-6 py-3 rounded-xl font-bold shadow-lg transition-colors flex items-center justify-center gap-2 shrink-0 w-full md:w-auto"
           >
-            <Sparkles className="w-5 h-5" />
+            <Award className="w-5 h-5" />
             Showcase Your Brilliance
           </button>
         </div>
@@ -378,7 +376,7 @@ This policy review advocates for localized algorithmic frameworks. Current mains
                   disabled={isGeneratingSummary}
                   className="text-xs font-bold text-[#022c22] hover:underline flex items-center gap-1"
                 >
-                  <Edit3 className="w-3 h-3" /> {isGeneratingSummary ? 'Generating...' : 'AI Generate'}
+                  <Edit3 className="w-3 h-3" /> {isGeneratingSummary ? 'Generating...' : 'Draft Summary'}
                 </button>
               </div>
               <p className="text-sm text-gray-600 leading-relaxed italic">

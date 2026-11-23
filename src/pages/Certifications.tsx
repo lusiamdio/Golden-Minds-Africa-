@@ -3,25 +3,24 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import { 
   Award, Share2, Download, CheckCircle2, ShieldCheck, 
-  ExternalLink, Sparkles, Crown, QrCode as QrCodeIcon, FileText, 
+  ExternalLink, Crown, QrCode as QrCodeIcon, FileText, 
   Briefcase, Linkedin, Mail, BarChart3, FileBadge, 
   GraduationCap, Loader2, RefreshCw, HelpCircle, X, Twitter,
   Lock, Unlock, Check, AlertCircle, Send, ArrowRight
 } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
 import { 
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer 
 } from 'recharts';
 import QRCode from 'react-qr-code';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import Markdown from 'react-markdown';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
 import appLogo from '../assets/images/logo.png';
 import { fellowshipRealtime } from '../lib/fellowshipRealtime';
 import { useTrackRender } from '../hooks/usePerformanceTracker';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+import { ai } from '../lib/gemini';
 
 // Mock Data for the Fellow's Performance & Credentials
 const MOCK_DATA = {
@@ -85,16 +84,17 @@ function CertificationsMain() {
     "This capstone proposes an AfCFTA multilateral framework mandating 40% domestic beneficiation of critical battery minerals (Lithium, Cobalt, Manganese) across SADC and ECOWAS. By pairing regional smelting hubs with localized zero-tariff transport corridors, African nations retain manufacturing value and sovereign bargaining power in global green transitions."
   );
   
-  // AI Recommendation State
+  // Recommendation Letter State
   const [recommendationLetter, setRecommendationLetter] = useState<string | null>(null);
   const [isGeneratingLetter, setIsGeneratingLetter] = useState(false);
 
-  // AI Explainability State
+  // Evaluation Explanation State
   const [showExplanation, setShowExplanation] = useState(false);
   const [aiExplanation, setAiExplanation] = useState<string | null>(null);
   const [isGeneratingExplanation, setIsGeneratingExplanation] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const certificateRef = useRef<HTMLDivElement>(null);
+  const letterRef = useRef<HTMLDivElement>(null);
 
   const handlePassFinalAssignment = async () => {
     setIsSubmittingCapstone(true);
@@ -164,13 +164,79 @@ function CertificationsMain() {
     }
   };
 
+  const handleDownloadPortfolioPDF = () => {
+    try {
+      const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+      doc.setFillColor(10, 31, 68);
+      doc.rect(0, 0, 210, 36, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(18);
+      doc.text('GOLDEN MINDS AFRICA FELLOWSHIP', 15, 16);
+      doc.setFontSize(10);
+      doc.setTextColor(201, 166, 70);
+      doc.text(`COMPILED POLICY PORTFOLIO • ${FELLOW_DATA.name.toUpperCase()}`, 15, 25);
+
+      doc.setTextColor(40, 40, 40);
+      doc.setFontSize(13);
+      doc.text(`Track: ${FELLOW_DATA.track}`, 15, 50);
+      doc.setFont('Helvetica', 'normal');
+      doc.setFontSize(10.5);
+      doc.text(`Classification: ${FELLOW_DATA.classification} (${FELLOW_DATA.percentile})`, 15, 58);
+      doc.text(`Overall Score: ${FELLOW_DATA.scores.overall}%`, 15, 65);
+
+      doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text('Final Capstone Policy Brief', 15, 80);
+      doc.setFont('Helvetica', 'normal');
+      doc.setFontSize(10);
+      const lines = doc.splitTextToSize(capstoneBrief, 180);
+      doc.text(lines, 15, 88);
+
+      doc.save(`${FELLOW_DATA.name.replace(/\s+/g, '_')}_Policy_Portfolio.pdf`);
+      toast.success('Policy Portfolio PDF downloaded.');
+    } catch (err) {
+      console.error('Portfolio PDF error:', err);
+      toast.error('Failed to compile portfolio PDF.');
+    }
+  };
+
+  const handleDownloadLetterPDF = () => {
+    if (!recommendationLetter) return;
+    try {
+      const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+      doc.setFillColor(10, 31, 68);
+      doc.rect(0, 0, 210, 32, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.text('GOLDEN MINDS AFRICA FELLOWSHIP', 15, 15);
+      doc.setFontSize(10);
+      doc.setTextColor(201, 166, 70);
+      doc.text('OFFICE OF THE ACADEMIC DEAN — RECOMMENDATION LETTER', 15, 23);
+
+      doc.setTextColor(35, 35, 35);
+      doc.setFont('Helvetica', 'normal');
+      doc.setFontSize(10.5);
+      const plainText = recommendationLetter.replace(/[#*_`>]/g, '');
+      const lines = doc.splitTextToSize(plainText, 180);
+      doc.text(lines, 15, 45);
+
+      doc.save(`${FELLOW_DATA.name.replace(/\s+/g, '_')}_Recommendation_Letter.pdf`);
+      toast.success('Recommendation Letter PDF downloaded.');
+    } catch (err) {
+      console.error('Letter PDF error:', err);
+      toast.error('Failed to generate recommendation letter PDF.');
+    }
+  };
+
   const handleExplainScore = async () => {
     setShowExplanation(true);
     if (aiExplanation) return; // Don't regenerate if already generated
 
     setIsGeneratingExplanation(true);
     try {
-      const prompt = `Act as an AI Academic Evaluator for the Golden Minds Africa Fellowship. 
+      const prompt = `Act as the Academic Evaluator for the Golden Minds Africa Fellowship. 
       Explain the final score of ${FELLOW_DATA.scores.overall}% and the classification of "${FELLOW_DATA.classification}" for ${FELLOW_DATA.name}.
       
       Here is the breakdown:
@@ -179,7 +245,7 @@ function CertificationsMain() {
       - Debates & Participation: ${FELLOW_DATA.scores.participation}%
       - Academic Assessments: ${FELLOW_DATA.scores.assessments}%
       
-      Provide a brief, encouraging, and analytical explanation (max 3 paragraphs) of why they received this score, highlighting their strengths in Participation and Projects, and areas they excelled in. Format with HTML paragraphs and bold text.`;
+      Provide a brief, encouraging, and analytical explanation (max 3 paragraphs) of why they received this score, highlighting their strengths in Participation and Projects, and areas they excelled in. Format in clean Markdown with bold text.`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
@@ -187,7 +253,7 @@ function CertificationsMain() {
       });
       setAiExplanation(response.text || 'Failed to generate explanation.');
     } catch (error) {
-      console.error('AI Error:', error);
+      console.error('Evaluation error:', error);
       setAiExplanation('An error occurred while generating the explanation. Please try again.');
     } finally {
       setIsGeneratingExplanation(false);
@@ -200,8 +266,8 @@ function CertificationsMain() {
       const prompt = `Act as the Academic Dean of the prestigious Golden Minds Africa Fellowship (comparable to Harvard Kennedy School or Oxford Blavatnik School). 
       Write a highly professional, authoritative, and personalized letter of recommendation for ${FELLOW_DATA.name}, who graduated with a "${FELLOW_DATA.classification}" (${FELLOW_DATA.percentile}) in the "${FELLOW_DATA.track}" track. 
       Highlight their exceptional scores: Projects (${FELLOW_DATA.scores.projects}%), Simulations (${FELLOW_DATA.scores.simulations}%), and overall average of ${FELLOW_DATA.scores.overall}%. 
-      Mention their policy portfolio, specifically their work on "AI Sovereignty in East Africa". 
-      The tone must be extremely prestigious, formal, and suitable for top-tier employers in government, policy, consulting, or international organizations. Use HTML formatting (paragraphs, bold text) for structure.`;
+      Mention their policy portfolio, specifically their work on "Digital Sovereignty in East Africa". 
+      The tone must be extremely prestigious, formal, and suitable for top-tier employers in government, policy, consulting, or international organizations. Format in clean Markdown (paragraphs and bold text) without raw HTML tags.`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
@@ -209,7 +275,7 @@ function CertificationsMain() {
       });
       setRecommendationLetter(response.text || 'Failed to generate letter.');
     } catch (error) {
-      console.error('AI Error:', error);
+      console.error('Letter generation error:', error);
       setRecommendationLetter('An error occurred while generating the recommendation letter. Please try again.');
     } finally {
       setIsGeneratingLetter(false);
@@ -342,7 +408,7 @@ function CertificationsMain() {
                           Submit Final Capstone Policy Defense
                         </h3>
                         <p className="text-xs text-gray-400 mt-0.5">
-                          Draft your multilateral policy blueprint below. The AI Diplomatic Examination Council will evaluate institutional feasibility and award your final grading.
+                          Draft your multilateral policy blueprint below. The Diplomatic Examination Council will evaluate institutional feasibility and award your final grading.
                         </p>
                       </div>
 
@@ -388,27 +454,31 @@ function CertificationsMain() {
                   <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
                     <div className="flex items-center gap-2 bg-white dark:bg-[#1a1a1a] p-2 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
                       <span className="text-sm text-gray-500 font-bold px-2">Share Achievement:</span>
-                      <button 
-                        onClick={() => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.origin + '/verify/' + FELLOW_DATA.id)}`, '_blank')}
+                      <a
+                        href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.origin + '/verify/' + FELLOW_DATA.id)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="flex items-center gap-2 px-3 py-2 bg-[#0077b5]/10 text-[#0077b5] rounded-lg hover:bg-[#0077b5]/20 transition-colors font-medium text-sm"
                         title="Share on LinkedIn"
                       >
                         <Linkedin className="w-4 h-4" /> LinkedIn
-                      </button>
-                      <button 
-                        onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.origin + '/verify/' + FELLOW_DATA.id)}&text=I just earned my Golden Minds Africa Fellowship certificate!`, '_blank')}
+                      </a>
+                      <a
+                        href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.origin + '/verify/' + FELLOW_DATA.id)}&text=I just earned my Golden Minds Africa Fellowship certificate!`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="flex items-center gap-2 px-3 py-2 bg-[#1DA1F2]/10 text-[#1DA1F2] rounded-lg hover:bg-[#1DA1F2]/20 transition-colors font-medium text-sm"
                         title="Share on Twitter"
                       >
                         <Twitter className="w-4 h-4" /> Twitter
-                      </button>
-                      <button 
-                        onClick={() => window.location.href = `mailto:?subject=My Golden Minds Africa Fellowship Certificate&body=Check out my certificate here: ${window.location.origin}/verify/${FELLOW_DATA.id}`}
+                      </a>
+                      <a
+                        href={`mailto:?subject=My Golden Minds Africa Fellowship Certificate&body=Check out my certificate here: ${window.location.origin}/verify/${FELLOW_DATA.id}`}
                         className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium text-sm"
                         title="Share via Email"
                       >
                         <Mail className="w-4 h-4" /> Email
-                      </button>
+                      </a>
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
@@ -592,7 +662,7 @@ function CertificationsMain() {
                 </div>
               </div>
 
-              {/* AI Explanation Modal/Panel */}
+              {/* Evaluation Explanation Modal/Panel */}
               <AnimatePresence>
                 {showExplanation && (
                   <motion.div 
@@ -611,9 +681,9 @@ function CertificationsMain() {
                     
                     <div className="flex items-center gap-3 mb-4">
                       <div className="p-2 bg-[#C9A646]/10 rounded-lg">
-                        <Sparkles className="w-5 h-5 text-[#C9A646]" />
+                        <Award className="w-5 h-5 text-[#C9A646]" />
                       </div>
-                      <h3 className="text-lg font-bold font-serif text-gray-900 dark:text-white">AI Evaluation Insights</h3>
+                      <h3 className="text-lg font-bold font-serif text-gray-900 dark:text-white">Academic Evaluation Insights</h3>
                     </div>
                     
                     {isGeneratingExplanation ? (
@@ -622,10 +692,9 @@ function CertificationsMain() {
                         <p>Analyzing performance metrics...</p>
                       </div>
                     ) : (
-                      <div 
-                        className="prose prose-sm dark:prose-invert max-w-none text-gray-600 dark:text-gray-300"
-                        dangerouslySetInnerHTML={{ __html: aiExplanation || '' }}
-                      />
+                      <div className="prose prose-sm dark:prose-invert max-w-none text-gray-600 dark:text-gray-300">
+                        <Markdown>{aiExplanation || ''}</Markdown>
+                      </div>
                     )}
                   </motion.div>
                 )}
@@ -703,10 +772,10 @@ function CertificationsMain() {
                         </div>
                       </div>
                       <div className="flex items-start gap-4 p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-xl">
-                        <Sparkles className="w-8 h-8 text-blue-600 dark:text-blue-500 shrink-0" />
+                        <Award className="w-8 h-8 text-blue-600 dark:text-blue-500 shrink-0" />
                         <div>
                           <h4 className="font-bold text-gray-900 dark:text-white">Excellence Award</h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Recognized for the exceptional "AI Sovereignty in East Africa" policy brief.</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Recognized for the exceptional "Digital Sovereignty in East Africa" policy brief.</p>
                         </div>
                       </div>
                     </div>
@@ -730,7 +799,11 @@ function CertificationsMain() {
                   <h2 className="text-xl font-bold font-serif text-gray-900 dark:text-white mb-1">Compiled Policy Portfolio</h2>
                   <p className="text-gray-500 dark:text-gray-400 text-sm">A professionally formatted collection of your fellowship work, ready for employers.</p>
                 </div>
-                <button className="flex items-center gap-2 px-6 py-3 bg-[#0A1F44] text-white rounded-xl font-bold hover:bg-[#071530] transition-colors whitespace-nowrap shadow-md">
+                <button
+                  type="button"
+                  onClick={handleDownloadPortfolioPDF}
+                  className="flex items-center gap-2 px-6 py-3 bg-[#0A1F44] text-white rounded-xl font-bold hover:bg-[#071530] transition-colors whitespace-nowrap shadow-md cursor-pointer"
+                >
                   <Download className="w-5 h-5" /> Download Portfolio
                 </button>
               </div>
@@ -752,7 +825,7 @@ function CertificationsMain() {
             </motion.div>
           )}
 
-          {/* 4. AI RECOMMENDATION LETTER */}
+          {/* 4. RECOMMENDATION LETTER */}
           {activeTab === 'recommendation' && (
             <motion.div
               key="recommendation"
@@ -768,13 +841,13 @@ function CertificationsMain() {
                   </div>
                   <h2 className="text-2xl font-bold font-serif text-gray-900 dark:text-white mb-4">Official Recommendation Letter</h2>
                   <p className="text-gray-600 dark:text-gray-400 max-w-lg mx-auto mb-8">
-                    Generate a highly personalized, authoritative recommendation letter drafted by our AI system based on your specific performance metrics, portfolio, and classification. This letter will be formatted for immediate use with employers or academic institutions.
+                    Prepare a personalized, authoritative recommendation letter compiled from your specific performance metrics, portfolio, and classification. This letter will be formatted for immediate use with employers or academic institutions.
                   </p>
                   <button 
                     onClick={handleGenerateLetter}
-                    className="flex items-center gap-2 px-8 py-4 bg-[#0A1F44] text-[#C9A646] rounded-xl font-bold hover:bg-[#071530] transition-colors mx-auto shadow-lg"
+                    className="flex items-center gap-2 px-8 py-4 bg-[#0A1F44] text-[#C9A646] rounded-xl font-bold hover:bg-[#071530] transition-colors mx-auto shadow-lg cursor-pointer"
                   >
-                    <Sparkles className="w-5 h-5" /> Draft Recommendation Letter
+                    <FileText className="w-5 h-5" /> Draft Recommendation Letter
                   </button>
                 </div>
               ) : isGeneratingLetter ? (
@@ -786,16 +859,24 @@ function CertificationsMain() {
               ) : (
                 <div className="space-y-6">
                   <div className="flex justify-end gap-3">
-                    <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#141414] border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
+                    <button
+                      type="button"
+                      onClick={handleGenerateLetter}
+                      className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#141414] border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors cursor-pointer"
+                    >
                       <RefreshCw className="w-4 h-4" /> Request Revision
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-[#0A1F44] text-white rounded-lg text-sm font-medium hover:bg-[#071530] transition-colors">
+                    <button
+                      type="button"
+                      onClick={handleDownloadLetterPDF}
+                      className="flex items-center gap-2 px-4 py-2 bg-[#0A1F44] text-white rounded-lg text-sm font-medium hover:bg-[#071530] transition-colors cursor-pointer"
+                    >
                       <Download className="w-4 h-4" /> Download PDF
                     </button>
                   </div>
                   
                   {/* The Letter Document */}
-                  <div className="bg-white p-8 md:p-16 shadow-xl rounded-sm border border-gray-200">
+                  <div ref={letterRef} className="bg-white p-8 md:p-16 shadow-xl rounded-sm border border-gray-200">
                     {/* Letterhead */}
                     <div className="border-b-2 border-[#0A1F44] pb-8 mb-8 flex justify-between items-start">
                       <div className="flex items-center gap-4">
@@ -816,10 +897,9 @@ function CertificationsMain() {
                     </div>
                     
                     {/* Letter Content */}
-                    <div 
-                      className="prose prose-lg prose-gray max-w-none font-serif leading-relaxed text-gray-800"
-                      dangerouslySetInnerHTML={{ __html: recommendationLetter || '' }}
-                    />
+                    <div className="prose prose-lg prose-gray max-w-none font-serif leading-relaxed text-gray-800">
+                      <Markdown>{recommendationLetter || ''}</Markdown>
+                    </div>
                     
                     {/* Signoff */}
                     <div className="mt-16 pt-8">

@@ -30,7 +30,6 @@ import {
   Download,
   Trash2,
   Calendar,
-  Sparkles,
   Link as LinkIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -100,7 +99,7 @@ export default function Profile() {
     'Policy Formulation': 24,
     'Multilateral Diplomacy': 19,
     'AfCFTA Strategy': 16,
-    'AI Sovereignty': 14,
+    'Digital Sovereignty': 14,
     'Strategic Foresight': 12
   });
 
@@ -289,7 +288,7 @@ export default function Profile() {
 
   const skillsList = profile?.skills 
     ? profile.skills.split(',').map(s => s.trim()).filter(Boolean)
-    : ['Policy Formulation', 'Multilateral Diplomacy', 'AfCFTA Strategy', 'AI Sovereignty', 'Strategic Foresight'];
+    : ['Policy Formulation', 'Multilateral Diplomacy', 'AfCFTA Strategy', 'Digital Sovereignty', 'Strategic Foresight'];
 
   return (
     <div className="min-h-screen bg-[#f3f2ef] dark:bg-[#070b09] text-gray-900 dark:text-gray-100 py-6 px-3 sm:px-6 lg:px-8 transition-colors">
@@ -540,12 +539,12 @@ export default function Profile() {
             <div className="pt-2">
               <span className="text-[10px] uppercase font-mono text-gray-400 block mb-2">Core Strategic Pillars</span>
               <div className="flex flex-wrap gap-2">
-                {(profile?.focusAreas || ['Geopolitics & Multilateral Diplomacy', 'AfCFTA Intra-African Trade & Finance', 'AI Sovereignty & Digital Infrastructure']).map((pillar, i) => (
+                {(profile?.focusAreas || ['Geopolitics & Multilateral Diplomacy', 'AfCFTA Intra-African Trade & Finance', 'Digital Sovereignty & Infrastructure']).map((pillar, i) => (
                   <span
                     key={i}
                     className="text-xs px-3 py-1 rounded-full bg-[#122119] text-[#d4af37] border border-[#1e392b] font-medium"
                   >
-                    ✦ {pillar}
+                    {pillar}
                   </span>
                 ))}
               </div>
@@ -864,7 +863,7 @@ export default function Profile() {
               onClick={() => navigate('/mentorship')}
               className="w-full text-left py-1.5 text-gray-600 dark:text-gray-400 hover:text-[#d4af37] flex items-center justify-between"
             >
-              <span>AI Mentor Matching</span>
+              <span>Mentor Matching</span>
               <ExternalLink className="w-3 h-3" />
             </button>
             <button
@@ -1397,7 +1396,7 @@ export default function Profile() {
             <div>
               <input
                 type="text"
-                placeholder="e.g. AfCFTA Tariff Analysis, AI Sovereignty"
+                placeholder="e.g. AfCFTA Tariff Analysis, Digital Sovereignty"
                 value={newSkill}
                 onChange={(e) => setNewSkill(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddSkill()}

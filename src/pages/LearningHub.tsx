@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { BookOpen, Search, PlayCircle, FileText, Sparkles, Loader2, BrainCircuit, TrendingUp, Clock, Download, PenTool, Youtube, Video, Bookmark, Award, CheckCircle } from 'lucide-react';
-import { GoogleGenAI, Type } from '@google/genai';
+import { BookOpen, Search, PlayCircle, FileText, Compass, Loader2, MessageSquare, TrendingUp, Clock, Download, PenTool, Youtube, Video, Bookmark, Award, CheckCircle } from 'lucide-react';
 import { Routes, Route, useNavigate, useLocation, Navigate, useParams } from 'react-router-dom';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { toast } from 'sonner';
+import { ai } from '../lib/gemini';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const Type = {
+  ARRAY: 'ARRAY',
+  OBJECT: 'OBJECT',
+  STRING: 'STRING',
+  NUMBER: 'NUMBER',
+  BOOLEAN: 'BOOLEAN',
+} as const;
 
 // Utility to parse YouTube IDs from general URLs or direct IDs
 const getYouTubeId = (url: string): string => {
@@ -281,7 +287,7 @@ function LearningHubMain() {
 
     try {
       const studyContext = `
-        You are the Golden Minds Africa AI Study Buddy, an elite curriculum assistant.
+        You are the Golden Minds Africa Study Companion, an elite curriculum advisor.
         The user is currently studying the material: "${selectedMaterial.title}"
         Type: "${selectedMaterial.type}"
         Overview: "${selectedMaterial.description || ''}"
@@ -475,7 +481,7 @@ function LearningHubMain() {
       <div className="flex-1 space-y-6">
         <div className="mb-8">
           <h1 className="text-4xl font-bold font-serif mb-2 cursor-pointer hover:underline" onClick={() => navigate('/learning-hub')}>Learning Hub</h1>
-          <p className="text-gray-600">Access your course materials and AI-augmented insights.</p>
+          <p className="text-gray-600">Access your course materials and structured curriculum insights.</p>
         </div>
 
         <div className="flex gap-4 border-b border-gray-200 mb-6 overflow-x-auto hide-scrollbar">
@@ -496,7 +502,7 @@ function LearningHubMain() {
               activeTab === 'feed' ? 'text-[#ff4e00]' : 'text-gray-500 hover:text-gray-900'
             }`}
           >
-            <Sparkles className="w-5 h-5" /> Smart Learning Feed
+            <Compass className="w-5 h-5" /> Smart Learning Feed
             {activeTab === 'feed' && (
               <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#ff4e00]" />
             )}
@@ -612,7 +618,7 @@ function LearningHubMain() {
               <div className="absolute top-0 right-0 w-64 h-64 bg-[#ff4e00] opacity-10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
               <div className="relative z-10 max-w-2xl">
                 <h2 className="text-3xl font-bold font-serif mb-4">Smart Learning Feed</h2>
-                <p className="text-gray-300 mb-6">A dynamic stream of articles, videos, and case studies personalized by AI based on your interests, engagement patterns, and skill gaps.</p>
+                <p className="text-gray-300 mb-6">A dynamic stream of articles, videos, and case studies tailored to your interests, engagement patterns, and policy goals.</p>
               </div>
             </div>
 
@@ -747,7 +753,7 @@ function LearningHubMain() {
         )}
       </div>
 
-      {/* Right Column - AI Assistant & Details */}
+      {/* Right Column - Study Companion & Details */}
       <div className="w-full lg:w-96 space-y-6 lg:col-span-2">
         {selectedMaterial ? (
           <motion.div 
@@ -871,7 +877,7 @@ function LearningHubMain() {
               </div>
             )}
 
-            {/* Smart Tabbed AI Study Buddy console */}
+            {/* Smart Tabbed Study Companion console */}
             <div className="border-t border-gray-100 pt-5 mt-5">
               <div className="flex bg-gray-100 p-1 rounded-xl mb-4">
                 <button
@@ -881,8 +887,8 @@ function LearningHubMain() {
                     activeBuddyTab === 'chat' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  <BrainCircuit className="w-3.5 h-3.5" />
-                  <span>AI Study Buddy</span>
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Study Companion</span>
                 </button>
                 <button
                   type="button"
@@ -891,7 +897,7 @@ function LearningHubMain() {
                     activeBuddyTab === 'summary' ? 'bg-white text-[#ff4e00]' : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <FileText className="w-3.5 h-3.5" />
                   <span>Doc Summary</span>
                 </button>
               </div>
@@ -917,11 +923,11 @@ function LearningHubMain() {
                     </div>
                   ) : aiSummary ? (
                     <div className="prose prose-sm max-w-none text-gray-700 bg-[#f5f5f0] p-4 rounded-2xl border border-gray-200">
-                      <div dangerouslySetInnerHTML={{ __html: aiSummary.replace(/\n/g, '<br/>') }} />
+                      <Markdown remarkPlugins={[remarkGfm]}>{aiSummary}</Markdown>
                     </div>
                   ) : (
                     <p className="text-gray-500 text-xs bg-gray-50 p-4 rounded-xl border border-gray-100 text-center leading-relaxed">
-                      Select "Generate Summary" to construct deep, AI-driven takeaways enriched with African policy context.
+                      Select "Generate Summary" to construct deep, structured takeaways enriched with African policy context.
                     </p>
                   )}
                 </div>
@@ -956,21 +962,21 @@ function LearningHubMain() {
                       onClick={() => handleSendBuddyMessage("Analyze 3 core policy risks referenced in this lesson blueprint.")}
                       className="px-2 py-0.5 bg-gray-100 hover:bg-gray-200 rounded-full text-[10px] text-gray-600 font-semibold transition-colors"
                     >
-                      🔍 Policy risks
+                      Policy risks
                     </button>
                     <button
                       type="button"
                       onClick={() => handleSendBuddyMessage("Explain how Ubuntu leadership philosophy reshapes this material.")}
                       className="px-2 py-0.5 bg-gray-100 hover:bg-gray-200 rounded-full text-[10px] text-gray-600 font-semibold transition-colors"
                     >
-                      🌱 Ubuntu philosophy
+                      Ubuntu philosophy
                     </button>
                     <button
                       type="button"
                       onClick={() => handleSendBuddyMessage("Give me a 3-point briefing summary suitable for an AU committee.")}
                       className="px-2 py-0.5 bg-gray-100 hover:bg-gray-200 rounded-full text-[10px] text-gray-600 font-semibold transition-colors"
                     >
-                      📝 Briefing notes
+                      Briefing notes
                     </button>
                   </div>
 
@@ -1011,19 +1017,19 @@ function LearningHubMain() {
   );
 }
 
-const MASTER_CONTENT_PROMPT = `📌 ROLE
+const MASTER_CONTENT_PROMPT = `ROLE
 You are an elite curriculum designer, political science professor, governance strategist, and instructional designer specializing in:
 - Leadership & Political Systems
 - African Governance & Development
 - Public Policy & Public Administration
 - Geopolitics & Global Institutions
-- Digital Governance & AI in Government
+- Digital Governance & Public Technology
 - Public Speaking, Influence & Crisis Leadership
 
 You are designing content for a world-class African Leadership, Governance, and Public Policy program.
 Your output must match the quality of institutions such as Harvard Kennedy School, Oxford Blavatnik School of Government, UN Leadership Training Programs, and African Union leadership initiatives.
 
-🎯 OBJECTIVE
+OBJECTIVE
 For the topic provided below, you must generate high-impact learning content that is:
 - Deep, structured, and intellectually rigorous
 - Africa-relevant (real examples, institutions, and challenges)
@@ -1031,7 +1037,7 @@ For the topic provided below, you must generate high-impact learning content tha
 - Suitable for emerging leaders, policymakers, and executives
 - Clear, engaging, and professionally formatted in pure Markdown
 
-📚 PROFESSIONAL ARTICLE FORMAT STRUCTURE (CRITICAL FOR ARTICLES & PDFs)
+PROFESSIONAL ARTICLE FORMAT STRUCTURE (CRITICAL FOR ARTICLES & PDFs)
 If the content type is ARTICLE or PDF/DOCUMENT, you MUST strictly generate the content using this 12-point structure:
 
 1. # TITLE
@@ -1049,7 +1055,7 @@ If the content type is ARTICLE or PDF/DOCUMENT, you MUST strictly generate the c
    - How It Works in Practice
    - Strengths and Limitations
    - Comparative Perspectives (Global vs African context)
-6. ## AFRICAN CONTEXT LENS 🌍
+6. ## AFRICAN CONTEXT LENS
    How the concept applies in African governance systems, structural challenges, success stories, and specific country examples.
 7. ## PRACTICAL APPLICATION (FROM THEORY TO ACTION)
    Show how leaders actually use this in Govt, Policy design, Diplomacy, NGOs, and Private sector.
@@ -1064,7 +1070,7 @@ If the content type is ARTICLE or PDF/DOCUMENT, you MUST strictly generate the c
 12. ## CONCLUSION
     End with a strategic reflection, future implications, or leadership call to action.
 
-🎥 SPECIAL CONTENT RULES (OVERRIDES FOR SPECIFIC FORMATS)
+SPECIAL CONTENT RULES (OVERRIDES FOR SPECIFIC FORMATS)
 Format the content according to this type rule:
 - ARTICLE: Deep explanation (800–1500 words equivalent), structured academic tone using the 12-point structure above.
 - VIDEO SCRIPT: Convert the core insights into a script format. Include an opening hook, teaching sections, real-world storytelling, and closing reflection.
@@ -1072,21 +1078,21 @@ Format the content according to this type rule:
 - CASE STUDY: Must include Background context, Key problem, Stakeholders, Decision points, Lessons learned, and Alternative outcomes.
 - ASSIGNMENT: Emphasize practical, simulation-based, and decision-oriented tasks.
 
-🧠 STYLE GUIDELINES
+STYLE GUIDELINES
 - Write in an executive, academic tone. Be clear, structured, and analytical. Avoid fluff or motivational clichés.
-- EXPLICIT CONNECTIONS: You MUST explicitly map the journey from Theory → Systems → Africa → Practice → Leadership Decision-Making in your prose.
+- EXPLICIT CONNECTIONS: You MUST explicitly map the journey from Theory -> Systems -> Africa -> Practice -> Leadership Decision-Making in your prose.
 - Think like a Policy advisor to a head of state or a UN strategist.
 
-✨ MANDATORY ENHANCEMENTS (MUST INCLUDE IN ALL ARTICLES & PDFs)
+MANDATORY ENHANCEMENTS (MUST INCLUDE IN ALL ARTICLES & PDFs)
 You MUST include all of the following in your generated markdown:
 1. **Insight Boxes:** Use blockquotes (e.g., > **Insight:** or > **Critical Definition:**) to highlight key concepts, critical definitions, or actionable advice.
 2. **Comparative Tables:** Include at least one Markdown table comparing different governance models, leadership frameworks, or policy approaches.
 3. **Text-Described Diagrams:** Include at least one visual framework described in text (e.g., using ASCII art, mermaid.js syntax blocks, or clear structured textual hierarchies representing a visual flow).
 
-🚀 FINAL INSTRUCTION
-👉 Focus on transforming learners into real-world leaders, not just students
-👉 Every lesson must build decision-making power, analytical thinking, and leadership judgment
-👉 Formatting MUST be pure Markdown so a React Markdown renderer displays it beautifully.`;
+FINAL INSTRUCTION
+- Focus on transforming learners into real-world leaders, not just students
+- Every lesson must build decision-making power, analytical thinking, and leadership judgment
+- Formatting MUST be pure Markdown so a React Markdown renderer displays it beautifully.`;
 
 function LearningHubReader() {
   const { materialId } = useParams();
@@ -1163,13 +1169,22 @@ function LearningHubReader() {
             <h4 className="font-bold text-sm uppercase tracking-wider text-gray-400 mb-4">Engagement Tools</h4>
             <div className="flex flex-wrap gap-4">
               <button 
-                onClick={() => alert('Saved to notes.')}
+                onClick={() => {
+                  try {
+                    const existing = JSON.parse(localStorage.getItem('gma_bookmarks') || '[]');
+                    if (!existing.some((b: any) => b.id === materialId)) {
+                      existing.push({ id: materialId, title: materialId || 'Reading Material', type: 'article', bookmarkedAt: new Date().toISOString(), personalNotes: content.slice(0, 500) });
+                      localStorage.setItem('gma_bookmarks', JSON.stringify(existing));
+                    }
+                  } catch {}
+                  toast.success('Saved to your notes in Knowledge Vault.');
+                }}
                 className="px-6 py-3 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 active:scale-95 rounded-xl font-medium transition-all shadow-sm"
                >
                 Take Notes
               </button>
               <button 
-                onClick={() => toast.success('🎉 Milestone Reached! Module completed successfully. Keep up the great work!', { duration: 4000 })}
+                onClick={() => toast.success('Milestone Reached! Module completed successfully.', { duration: 4000 })}
                 className="px-6 py-3 bg-[#ff4e00]/10 text-[#ff4e00] hover:bg-[#ff4e00]/20 active:scale-95 border border-[#ff4e00]/20 rounded-xl font-medium transition-all shadow-sm"
                >
                 Log Read Completion
@@ -1340,15 +1355,15 @@ function LearningHubVideoPlayer() {
               </div>
 
               <div className="absolute top-6 right-6 flex gap-3 z-10">
-                <button 
-                  onClick={() => {
-                    toast.info(`Opening reference link on YouTube`);
-                    window.open(`https://www.youtube.com/watch?v=${youtubeId}`, '_blank');
-                  }}
+                <a 
+                  href={`https://www.youtube.com/watch?v=${youtubeId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => toast.info('Opening reference link on YouTube')}
                   className="bg-black/45 hover:bg-black/60 backdrop-blur-sm active:scale-95 text-white border border-white/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5"
                 >
                   <Youtube className="w-3.5 h-3.5 text-red-500" /> Watch on YouTube &rarr;
-                </button>
+                </a>
               </div>
             </>
           )}
@@ -1402,13 +1417,22 @@ function LearningHubVideoPlayer() {
             <h4 className="font-bold text-sm uppercase tracking-wider text-gray-400 mb-4">Engagement Tools</h4>
             <div className="flex flex-wrap gap-4">
               <button 
-                onClick={() => alert('Saved to notes.')}
+                onClick={() => {
+                  try {
+                    const existing = JSON.parse(localStorage.getItem('gma_bookmarks') || '[]');
+                    if (!existing.some((b: any) => b.id === materialId)) {
+                      existing.push({ id: materialId, title, type: 'video', bookmarkedAt: new Date().toISOString(), personalNotes: scriptContent.slice(0, 500) });
+                      localStorage.setItem('gma_bookmarks', JSON.stringify(existing));
+                    }
+                  } catch {}
+                  toast.success('Saved to your notes in Knowledge Vault.');
+                }}
                 className="px-6 py-3 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 active:scale-95 rounded-xl font-medium transition-all shadow-sm"
                >
                 Take Notes
               </button>
               <button 
-                onClick={() => toast.success('🎉 Milestone Reached! Module completed successfully. Keep up the great work!', { duration: 4000 })}
+                onClick={() => toast.success('Milestone Reached! Module completed successfully.', { duration: 4000 })}
                 className="px-6 py-3 bg-[#ff4e00]/10 text-[#ff4e00] hover:bg-[#ff4e00]/20 active:scale-95 border border-[#ff4e00]/20 rounded-xl font-medium transition-all shadow-sm"
                >
                 Mark Completed

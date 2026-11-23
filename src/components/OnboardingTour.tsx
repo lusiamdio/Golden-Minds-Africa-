@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, ArrowRight, ArrowLeft, X, Check } from 'lucide-react';
+import { Compass, ArrowRight, ArrowLeft, X, Check } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface TourStep {
@@ -20,15 +20,15 @@ const TOUR_STEPS: TourStep[] = [
     position: 'bottom'
   },
   {
-    title: 'Daily AI Recap',
-    description: 'Each morning, the Dashboard features an intelligent recap generated on the fly by Gemini, compiling your schedule, pending tasks, and recent ecosystem highlights.',
+    title: 'Daily Executive Brief',
+    description: 'Each morning, the Dashboard compiles your schedule, pending tasks, and recent ecosystem highlights into a concise executive summary.',
     targetId: 'daily-recap-section',
     targetPage: '/',
     position: 'bottom'
   },
   {
-    title: 'AI Center',
-    description: 'Enter your dedicated AI workspace for real-time document synthesizers, translation, and chat models.',
+    title: 'Research Studio',
+    description: 'Enter your dedicated workspace for real-time document synthesis, translation, and policy analysis.',
     targetId: 'tour-nav-notes',
     position: 'right'
   },
@@ -184,7 +184,7 @@ export default function OnboardingTour() {
       >
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2 text-amber-500 font-bold text-xs sm:text-sm uppercase tracking-wider">
-            <Sparkles className="w-4 h-4 animate-pulse text-[#cca568]" />
+            <Compass className="w-4 h-4 text-[#cca568]" />
             <span>Virtual Walkthrough</span>
           </div>
           <button 
@@ -205,7 +205,7 @@ export default function OnboardingTour() {
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-zinc-850">
+        <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-zinc-800">
           <span className="text-xs text-gray-400 font-mono">
             Step {activeStep + 1} of {TOUR_STEPS.length}
           </span>

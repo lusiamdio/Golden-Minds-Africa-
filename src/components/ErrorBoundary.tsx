@@ -23,7 +23,7 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught runtime error intercepted by AI Giga-Guardian Boundary:", error, errorInfo);
+    console.error("Uncaught runtime error intercepted by Runtime Guard:", error, errorInfo);
     this.setState({ errorInfo });
   }
 
@@ -104,7 +104,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               </button>
               <button
                 onClick={() => { window.location.href = '/'; }}
-                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3.5 bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-750 text-gray-700 dark:text-gray-200 text-sm font-semibold rounded-xl transition-all cursor-pointer"
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3.5 bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-gray-200 text-sm font-semibold rounded-xl transition-all cursor-pointer"
               >
                 <Home className="w-4 h-4" />
                 Return Home

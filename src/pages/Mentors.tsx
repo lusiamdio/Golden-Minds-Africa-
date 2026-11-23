@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Users, Sparkles, Calendar, MessageSquare, Star, ArrowRight, ShieldCheck } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
+import { Users, Calendar, MessageSquare, Star, ArrowRight, ShieldCheck, Award, Loader2 } from 'lucide-react';
+import Markdown from 'react-markdown';
+import { ai } from '../lib/gemini';
 import { useAuth } from '../contexts/AuthContext';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const MOCK_MENTORS = [];
 
@@ -20,7 +19,7 @@ function MentorsMain() {
     navigate('/mentorship/match');
     setIsMatching(true);
     try {
-      const prompt = `Act as an AI mentor matching engine for an African leadership fellowship. 
+      const prompt = `Act as a mentor matching advisor for an African leadership fellowship. 
       The fellow's name is ${profile?.name || 'a fellow'} and they are interested in Policy and Tech.
       Based on the available mentors (Dr. Amina Yusuf - Public Policy & Tech, Kwame Osei - Entrepreneurship, Sarah Ndlovu - Economics), 
       recommend the best mentor for them and explain why in 2 short sentences.`;
@@ -32,7 +31,7 @@ function MentorsMain() {
       setMatchResult(response.text || 'Match generation failed.');
     } catch (error) {
       console.error('Error generating match:', error);
-      setMatchResult('Unable to connect to AI Assistant.');
+      setMatchResult('Unable to connect to Mentor Advisory Service.');
     } finally {
       setIsMatching(false);
     }
@@ -42,15 +41,15 @@ function MentorsMain() {
     <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 pb-12 p-4 md:p-8">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold font-serif mb-2 text-[#022c22] cursor-pointer hover:underline" onClick={() => navigate('/mentorship')}>AI Mentor Matching</h1>
+          <h1 className="text-3xl md:text-4xl font-bold font-serif mb-2 text-[#022c22] cursor-pointer hover:underline" onClick={() => navigate('/mentorship')}>Mentor Matching</h1>
           <p className="text-gray-600 text-sm sm:text-base">Connect with industry leaders and alumni based on your career goals.</p>
         </div>
         <button 
           onClick={handleAIMatch}
           disabled={isMatching}
-          className="flex items-center justify-center gap-2 bg-[#d4af37] text-white px-6 py-3 rounded-full shadow-lg hover:bg-yellow-500 transition-colors disabled:opacity-70 font-bold w-full md:w-auto text-sm sm:text-base"
+          className="flex items-center justify-center gap-2 bg-[#d4af37] text-white px-6 py-3 rounded-full shadow-lg hover:bg-yellow-500 transition-colors disabled:opacity-70 font-bold w-full md:w-auto text-sm sm:text-base cursor-pointer"
         >
-          {isMatching ? <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse" /> : <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />}
+          {isMatching ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> : <Users className="w-4 h-4 sm:w-5 sm:h-5" />}
           Find My Perfect Match
         </button>
       </div>
@@ -64,10 +63,10 @@ function MentorsMain() {
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#d4af37] opacity-10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
           <div className="relative z-10">
             <div className="flex items-center gap-2 text-[#d4af37] font-bold mb-3 sm:mb-4 uppercase tracking-wider text-xs sm:text-sm">
-              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" /> AI Match Recommendation
+              <Award className="w-4 h-4 sm:w-5 sm:h-5" /> Recommended Mentor Pairing
             </div>
             <div className="prose prose-invert max-w-none text-base sm:text-lg leading-relaxed font-medium">
-              <div dangerouslySetInnerHTML={{ __html: matchResult.replace(/\n/g, '<br/>') }} />
+              <Markdown>{matchResult}</Markdown>
             </div>
           </div>
         </motion.div>

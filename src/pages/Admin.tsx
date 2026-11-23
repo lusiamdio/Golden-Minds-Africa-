@@ -3,14 +3,14 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ShieldAlert, Users, Calendar, Image as ImageIcon, Loader2, Download, 
-  BarChart3, BookOpen, MessageSquare, Settings, BrainCircuit, 
+  BarChart3, BookOpen, MessageSquare, Settings, 
   TrendingUp, AlertTriangle, FileText, Plus, Search, MoreVertical, Video,
   CheckCircle2, Clock, GraduationCap, Award, Mail, Trophy, Activity, Filter,
   Layers, Upload, Shuffle, Check, X as CloseIcon, ShieldCheck, Eye, EyeOff,
   Cpu, Terminal, RefreshCw, LogIn, Lock, Trash2, Send, Bookmark, Info, HelpCircle,
   Crown, Edit2, CheckSquare, EyeOff as EyeOffIcon, AlertCircle, Share2, Globe
 } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
+import { ai } from '../lib/gemini';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
@@ -20,8 +20,6 @@ import {
   AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export default function Admin() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -129,6 +127,7 @@ export default function Admin() {
 
   // UI state variables
   const [userQuery, setUserQuery] = useState('');
+  const [pendingConfirmId, setPendingConfirmId] = useState<string | null>(null);
   const [fellowContentFilter, setFellowContentFilter] = useState<'All' | 'Forum Post' | 'Shared Document' | 'Assignment Submission' | 'Portfolio Showcase' | 'AI Note'>('All');
   const [pubSearch, setPubSearch] = useState('');
   const [pubTypeFilter, setPubTypeFilter] = useState('All');
@@ -270,7 +269,7 @@ export default function Admin() {
                 `1. "/risk-factors" - Analyzes active drop-out triggers or delayed assignment milestones.\n` +
                 `2. "/verification-status" - Audits credentials, verification backlogs, and recommender logs.\n` +
                 `3. "/site-readiness" - Evaluates maintenance configurations and performs active backend network diagnostics.\n` +
-                `4. "/engagement-forecast" - Dispatches Gemini forecasting matrix for next quarter study metrics.` 
+                `4. "/engagement-forecast" - Dispatches forecasting matrix for next quarter study metrics.` 
         }]);
         setIsTerminalProcessing(false);
         return;
@@ -278,7 +277,7 @@ export default function Admin() {
 
       if (cleanInput.includes('readiness') || cleanInput.includes('/site-readiness')) {
         // Run real database ping
-        let dbStatus = "🔴 Checking connection...";
+        let dbStatus = "[PENDING] Checking connection...";
         let dbLatency = "N/A";
         let dbDetails = "";
         let profilesCount = 0;
@@ -293,28 +292,28 @@ export default function Admin() {
           dbLatency = `${Math.round(endDb - startDb)}ms`;
           
           if (error) {
-            dbStatus = "🔴 Offline / Misconfigured";
+            dbStatus = "[OFFLINE] Misconfigured";
             dbDetails = `Error: ${error.message} (Code: ${error.code})`;
           } else {
-            dbStatus = "🟢 Online & Connected";
+            dbStatus = "[ONLINE] Connected";
             profilesCount = count || 0;
             dbDetails = `Database handshake successful. Mapped profiles count: ${profilesCount}`;
           }
         } catch (e: any) {
-          dbStatus = "🔴 Connection Refused / Network Error";
+          dbStatus = "[OFFLINE] Connection Refused / Network Error";
           dbDetails = `Exception: ${e.message || String(e)}`;
         }
 
         // Run Supabase verification
-        let fbStatus = "🟢 Operational";
+        let fbStatus = "[ONLINE] Operational";
         let fbDetails = "Supabase Authentication API is initialised and tracking user tokens.";
         if (!supabase.auth) {
-          fbStatus = "🔴 Offline / Not Initialised";
+          fbStatus = "[OFFLINE] Not Initialised";
           fbDetails = "Supabase Auth object is empty or unconfigured.";
         }
 
-        // Run Gemini API check
-        let aiStatus = "🔴 Checking...";
+        // Run Advisory Service check
+        let aiStatus = "[PENDING] Checking...";
         let aiLatency = "N/A";
         let aiDetails = "";
         const startAi = performance.now();
@@ -326,14 +325,14 @@ export default function Admin() {
           const endAi = performance.now();
           aiLatency = `${Math.round(endAi - startAi)}ms`;
           if (response && response.text) {
-            aiStatus = "🟢 Operational (Healthy)";
-            aiDetails = `Gemini model handshake completed. Latency: ${aiLatency}`;
+            aiStatus = "[ONLINE] Operational (Healthy)";
+            aiDetails = `Advisory service handshake completed. Latency: ${aiLatency}`;
           } else {
-            aiStatus = "🟡 Partial Response";
-            aiDetails = "Model returned empty response body.";
+            aiStatus = "[PARTIAL] Partial Response";
+            aiDetails = "Service returned empty response body.";
           }
         } catch (e: any) {
-          aiStatus = "🔴 Handshake Failed";
+          aiStatus = "[FAILED] Handshake Failed";
           aiDetails = `Error: ${e.message || String(e)}`;
         }
 
@@ -344,26 +343,26 @@ export default function Admin() {
    - Handshake Latency: ${dbLatency}
    - System Details: ${dbDetails}
 
-2. FIREBASE AUTHENTICATION GATEWAY:
+2. SUPABASE AUTHENTICATION GATEWAY:
    - Status: ${fbStatus}
    - System Details: ${fbDetails}
 
-3. COGNITIVE AI CORE (GEMINI-2.5-FLASH):
+3. EXECUTIVE ADVISORY SERVICE:
    - Status: ${aiStatus}
-   - Model Latency: ${aiLatency}
+   - Service Latency: ${aiLatency}
    - System Details: ${aiDetails}
 
 4. PLATFORM INTEGRITY & ROUTING SUMMARY:
-   - UI Client Stability: 🟢 Stable & Fully Integrated
-   - Super Admin Gatekeeper: 🟢 Authenticated & Online
-   - Maintenance Status: ${siteConfig.maintenanceMode ? "🟡 ENABLED" : "🟢 DISABLED"}
-   - Onboarding Lock: ${siteConfig.lockOnboarding ? "🟡 LOCKED" : "🟢 OPEN"}
+   - UI Client Stability: [ONLINE] Stable & Fully Integrated
+   - Super Admin Gatekeeper: [ONLINE] Authenticated & Online
+   - Maintenance Status: ${siteConfig.maintenanceMode ? "[ENABLED]" : "[DISABLED]"}
+   - Onboarding Lock: ${siteConfig.lockOnboarding ? "[LOCKED]" : "[OPEN]"}
    - Timestamp Check: ${new Date().toLocaleString()}
 --------------------------------------------------
 DIAGNOSIS RESULT: ${
-          dbStatus.includes('🟢') && aiStatus.includes('🟢') 
-            ? "👑 ALL BACKEND CHANNELS AND DATABASE PORT CHANNELS ARE CONNECTED WELL AND OPERATING PROPERLY." 
-            : "⚠️ PARTIAL DEGRADATION DETECTED. CHECK ENVIRONMENT VARIABLES."
+          dbStatus.includes('[ONLINE]') && aiStatus.includes('[ONLINE]') 
+            ? "[OK] ALL BACKEND CHANNELS AND DATABASE PORT CHANNELS ARE CONNECTED WELL AND OPERATING PROPERLY." 
+            : "[WARN] PARTIAL DEGRADATION DETECTED. CHECK ENVIRONMENT VARIABLES."
         }`;
 
         setTerminalHistory(prev => [...prev, { 
@@ -385,7 +384,6 @@ DIAGNOSIS RESULT: ${
         promptText = `You are the Administrative Intelligence backend of Golden Minds Africa Super Admin Portal. Simao Simas has asked the following command query: "${queryText}". Provide a highly polished, executive administrative response (max 3 short paragraphs) with simulated stats, suggesting optimizations for fellowship governance.`;
       }
 
-      // Modern Google Gen AI streaming/content call
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: promptText
@@ -393,14 +391,14 @@ DIAGNOSIS RESULT: ${
 
       setTerminalHistory(prev => [...prev, { 
         type: 'assistant', 
-        text: response.text || "Neural query executed successfully." 
+        text: response.text || "Diagnostic query executed successfully." 
       }]);
-      logAdminAction(`Executed Core AI terminal diagnostic query: "${queryText.substring(0, 40)}"`, 'Gemini AI Core', 'System');
+      logAdminAction(`Executed terminal diagnostic query: "${queryText.substring(0, 40)}"`, 'Diagnostics Core', 'System');
     } catch (err: any) {
       console.error(err);
       setTerminalHistory(prev => [...prev, { 
         type: 'error', 
-        text: `Handshake failed with Gemini Core Services: ${err?.message || 'Access Blocked.'}` 
+        text: `Handshake failed with Advisory Services: ${err?.message || 'Access Blocked.'}` 
       }]);
     } finally {
       setIsTerminalProcessing(false);
@@ -517,7 +515,7 @@ DIAGNOSIS RESULT: ${
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0c] flex items-center justify-center p-4">
-        <div className="max-w-md w-full p-8 bg-white dark:bg-[#121212] border border-gray-100 dark:border-gray-850 rounded-3xl shadow-xl relative overflow-hidden">
+        <div className="max-w-md w-full p-8 bg-white dark:bg-[#121212] border border-gray-100 dark:border-gray-800 rounded-3xl shadow-xl relative overflow-hidden">
           <div className="absolute -top-16 -right-16 w-36 h-36 rounded-full bg-amber-500/5 blur-2xl pointer-events-none" />
           <div className="absolute -bottom-16 -left-16 w-36 h-36 rounded-full bg-[#5b5b40]/5 blur-2xl pointer-events-none" />
 
@@ -594,7 +592,7 @@ DIAGNOSIS RESULT: ${
             </button>
           </form>
 
-          <div className="mt-8 text-center border-t border-gray-100 dark:border-gray-850 pt-5">
+          <div className="mt-8 text-center border-t border-gray-100 dark:border-gray-800 pt-5">
             <p className="text-[10px] text-gray-400 mt-2 leading-relaxed font-mono">
               All console transactions are audited. Unauthorized connection coordinates are packaged and forwarded.
             </p>
@@ -648,7 +646,7 @@ DIAGNOSIS RESULT: ${
               
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs text-gray-700 dark:text-gray-300 font-medium block">AI Copilot Agent</span>
+                  <span className="text-xs text-gray-700 dark:text-gray-300 font-medium block">Advisory Assistant</span>
                   <span className="text-[10px] text-gray-400">Enable site-wide help</span>
                 </div>
                 <button 
@@ -699,7 +697,7 @@ DIAGNOSIS RESULT: ${
               { id: 'incident_reports', label: 'Conduct Reports', icon: AlertTriangle },
               { id: 'verification', label: 'Credential Audits', icon: ShieldCheck },
               { id: 'pages', label: 'Site Pages & Sections', icon: Layers },
-              { id: 'terminal', label: 'Neural Diagnostics', icon: Terminal },
+              { id: 'terminal', label: 'System Diagnostics', icon: Terminal },
               { id: 'audit_logs', label: 'Administrative Logs', icon: FileText },
             ].map(tab => {
               const IconComp = tab.icon;
@@ -731,12 +729,24 @@ DIAGNOSIS RESULT: ${
             <button
               onClick={() => {
                 sessionStorage.setItem('gma-super-admin-redirected', 'true');
+                sessionStorage.setItem('gma_portal_active', 'true');
                 navigate('/', { replace: true });
               }}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-xs text-[#5b5b40] dark:text-[#cca568] hover:bg-[#5b5b40]/10 dark:hover:bg-[#cca568]/10 transition-all text-left mt-2 border border-dashed border-[#5b5b40]/20 dark:border-[#cca568]/20 w-full animate-pulse"
+              className="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-xs text-[#5b5b40] dark:text-[#cca568] hover:bg-[#5b5b40]/10 dark:hover:bg-[#cca568]/10 transition-all text-left mt-2 border border-dashed border-[#5b5b40]/20 dark:border-[#cca568]/20 w-full"
             >
               <Globe className="w-4 h-4 shrink-0 text-[#5b5b40] dark:text-[#cca568]" />
               <span className="truncate">Go to Fellow Platform</span>
+            </button>
+
+            <button
+              onClick={() => {
+                sessionStorage.removeItem('gma_portal_active');
+                navigate('/', { replace: true });
+              }}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-left mt-1 border border-gray-200 dark:border-gray-800 w-full"
+            >
+              <Globe className="w-4 h-4 shrink-0" />
+              <span className="truncate">Website</span>
             </button>
           </div>
 
@@ -763,7 +773,7 @@ DIAGNOSIS RESULT: ${
               {/* === TAB 1: ECOSYSTEM TELEMETRY & RECHARTS === */}
               {activeTab === 'analytics' && (
                 <div className="space-y-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-850 pb-5">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-5">
                     <div>
                       <h2 className="text-2xl font-serif font-black text-gray-900 dark:text-white flex items-center gap-2">
                         <BarChart3 className="w-6 h-6 text-[#cca568]" /> 
@@ -786,7 +796,7 @@ DIAGNOSIS RESULT: ${
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                      <div className="bg-white dark:bg-black p-4 rounded-xl space-y-3 border border-gray-100 dark:border-gray-850">
+                      <div className="bg-white dark:bg-black p-4 rounded-xl space-y-3 border border-gray-100 dark:border-gray-800">
                         <p className="font-bold text-xs">Rectify Segment: Monthly hours vs. Active followers</p>
                         <div className="grid grid-cols-3 gap-2">
                           <div>
@@ -802,7 +812,7 @@ DIAGNOSIS RESULT: ${
                                   setRectifyActiveMetric(found.activeFollowers);
                                 }
                               }}
-                              className="w-full text-xs rounded border border-gray-200 dark:border-gray-850 p-1.5 bg-gray-50 dark:bg-zinc-900 font-mono text-[#cca568] focus:ring-0 focus:outline-none"
+                              className="w-full text-xs rounded border border-gray-200 dark:border-gray-800 p-1.5 bg-gray-50 dark:bg-zinc-900 font-mono text-[#cca568] focus:ring-0 focus:outline-none"
                             >
                               {growthData.map(d => <option key={d.month} value={d.month}>{d.month}</option>)}
                             </select>
@@ -817,7 +827,7 @@ DIAGNOSIS RESULT: ${
                                 setRectifyActiveMetric(val);
                                 updateEngagementData(selectedMonthToRectify, 'activeFollowers', val);
                               }}
-                              className="w-full text-xs rounded border border-gray-200 dark:border-gray-850 p-1 bg-gray-50 dark:bg-zinc-900 max-w-full font-mono focus:ring-0 focus:outline-none" 
+                              className="w-full text-xs rounded border border-gray-200 dark:border-gray-800 p-1 bg-gray-50 dark:bg-zinc-900 max-w-full font-mono focus:ring-0 focus:outline-none" 
                             />
                           </div>
                           <div>
@@ -830,13 +840,13 @@ DIAGNOSIS RESULT: ${
                                 setRectifyHoursMetric(val);
                                 updateEngagementData(selectedMonthToRectify, 'studyHours', val);
                               }}
-                              className="w-full text-xs rounded border border-gray-200 dark:border-gray-850 p-1 bg-gray-50 dark:bg-zinc-900 max-w-full font-mono focus:ring-0 focus:outline-none" 
+                              className="w-full text-xs rounded border border-gray-200 dark:border-gray-800 p-1 bg-gray-50 dark:bg-zinc-900 max-w-full font-mono focus:ring-0 focus:outline-none" 
                             />
                           </div>
                         </div>
                       </div>
 
-                      <div className="bg-white dark:bg-black p-4 rounded-xl space-y-3 border border-gray-100 dark:border-gray-850">
+                      <div className="bg-white dark:bg-black p-4 rounded-xl space-y-3 border border-gray-100 dark:border-gray-800">
                         <p className="font-bold text-xs">Rectify Segment: Regional Enrollment Demographics</p>
                         <div className="grid grid-cols-2 gap-2">
                           <div>
@@ -851,7 +861,7 @@ DIAGNOSIS RESULT: ${
                                   setRectifyRegionCount(found.count);
                                 }
                               }}
-                              className="w-full text-xs rounded border border-gray-200 dark:border-gray-850 p-1.5 bg-gray-50 dark:bg-zinc-900 font-mono text-[#cca568] focus:ring-0 focus:outline-none"
+                              className="w-full text-xs rounded border border-gray-200 dark:border-gray-800 p-1.5 bg-gray-50 dark:bg-zinc-900 font-mono text-[#cca568] focus:ring-0 focus:outline-none"
                             >
                               {membershipData.map(d => <option key={d.region} value={d.region}>{d.region}</option>)}
                             </select>
@@ -866,7 +876,7 @@ DIAGNOSIS RESULT: ${
                                 setRectifyRegionCount(val);
                                 updateMembershipCount(rectifyRegion, val);
                               }}
-                              className="w-full text-xs rounded border border-gray-200 dark:border-gray-850 p-1 bg-gray-50 dark:bg-zinc-900 max-w-full font-mono focus:ring-0 focus:outline-none" 
+                              className="w-full text-xs rounded border border-gray-200 dark:border-gray-800 p-1 bg-gray-50 dark:bg-zinc-900 max-w-full font-mono focus:ring-0 focus:outline-none" 
                             />
                           </div>
                         </div>
@@ -876,26 +886,26 @@ DIAGNOSIS RESULT: ${
 
                   {/* KPI summary tiles */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-gray-50 dark:bg-black/40 p-5 rounded-2xl border border-gray-100 dark:border-gray-850">
+                    <div className="bg-gray-50 dark:bg-black/40 p-5 rounded-2xl border border-gray-100 dark:border-gray-800">
                       <span className="text-[10px] uppercase font-bold text-gray-400">Synchronized Total Fellows</span>
                       <p className="text-3xl font-black font-serif mt-1 text-[#cca568]">
                         {growthData[growthData.length - 1]?.activeFollowers || 154}
                       </p>
                       <p className="text-[10px] text-emerald-500 mt-1">Growth Index Active</p>
                     </div>
-                    <div className="bg-gray-50 dark:bg-black/40 p-5 rounded-2xl border border-gray-100 dark:border-gray-850">
+                    <div className="bg-gray-50 dark:bg-black/40 p-5 rounded-2xl border border-gray-100 dark:border-gray-800">
                       <span className="text-[10px] uppercase font-bold text-gray-400">Global Study Hours</span>
                       <p className="text-3xl font-black font-serif mt-1 text-blue-500">
                         {growthData[growthData.length - 1]?.studyHours || 680}
                       </p>
                       <p className="text-[10px] text-gray-400 mt-1">Hours logged on hub</p>
                     </div>
-                    <div className="bg-gray-50 dark:bg-black/40 p-5 rounded-2xl border border-gray-100 dark:border-gray-850">
+                    <div className="bg-gray-50 dark:bg-black/40 p-5 rounded-2xl border border-gray-100 dark:border-gray-800">
                       <span className="text-[10px] uppercase font-bold text-gray-400">Total Faculty mentors</span>
                       <p className="text-3xl font-black font-serif mt-1 text-emerald-500">{mentors.length}</p>
                       <p className="text-[10px] text-gray-400 mt-1">Assigned advisors</p>
                     </div>
-                    <div className="bg-gray-50 dark:bg-black/40 p-5 rounded-2xl border border-gray-100 dark:border-gray-850">
+                    <div className="bg-gray-50 dark:bg-black/40 p-5 rounded-2xl border border-gray-100 dark:border-gray-800">
                       <span className="text-[10px] uppercase font-bold text-gray-400">Platform publications</span>
                       <p className="text-3xl font-black font-serif mt-1 text-violet-500">{publications.length}</p>
                       <p className="text-[10px] text-gray-400 mt-1">Core research papers</p>
@@ -904,7 +914,7 @@ DIAGNOSIS RESULT: ${
 
                   {/* Recharts Renderers */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="bg-white dark:bg-[#151518]/50 p-6 rounded-3xl border border-gray-100 dark:border-gray-850">
+                    <div className="bg-white dark:bg-[#151518]/50 p-6 rounded-3xl border border-gray-100 dark:border-gray-800">
                       <h3 className="font-bold text-sm mb-4 flex items-center gap-2">
                         <TrendingUp className="w-4 h-4 text-[#cca568]" />
                         Ecosystem Growth Engagement
@@ -930,7 +940,7 @@ DIAGNOSIS RESULT: ${
                       </div>
                     </div>
 
-                    <div className="bg-white dark:bg-[#151518]/50 p-6 rounded-3xl border border-gray-100 dark:border-gray-850">
+                    <div className="bg-white dark:bg-[#151518]/50 p-6 rounded-3xl border border-gray-100 dark:border-gray-800">
                       <h3 className="font-bold text-sm mb-4 flex items-center gap-2">
                         <Activity className="w-4 h-4 text-emerald-500" />
                         Study Metric Outputs
@@ -951,7 +961,7 @@ DIAGNOSIS RESULT: ${
                     </div>
                   </div>
 
-                  <div className="bg-white dark:bg-[#151518]/50 p-6 rounded-3xl border border-gray-100 dark:border-gray-850">
+                  <div className="bg-white dark:bg-[#151518]/50 p-6 rounded-3xl border border-gray-100 dark:border-gray-800">
                     <h3 className="font-bold text-sm mb-4 flex items-center gap-2">
                       <Clock className="w-4 h-4 text-amber-500 animate-pulse" />
                       Hourly Active Users & Peak Engagement Periods
@@ -981,7 +991,7 @@ DIAGNOSIS RESULT: ${
                     <p className="text-[10px] text-gray-500 text-center mt-2">Peak fellowship interactions occurs at 18:00 (UTC) during our global policy masterclasses.</p>
                   </div>
 
-                  <div className="bg-white dark:bg-[#151518]/50 p-6 rounded-3xl border border-gray-100 dark:border-gray-850">
+                  <div className="bg-white dark:bg-[#151518]/50 p-6 rounded-3xl border border-gray-100 dark:border-gray-800">
                     <h3 className="font-bold text-sm mb-4 flex items-center gap-2">
                       <Globe className="w-4 h-4 text-violet-500 animate-pulse" />
                       Geographic Growth Patterns (Regional Heatmap)
@@ -989,10 +999,10 @@ DIAGNOSIS RESULT: ${
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
                       <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {[
-                          { region: 'West Africa', country: 'Nigeria, Ghana, Senegal', fellows: 310, density: 'High density', color: 'bg-emerald-955 border-emerald-800 text-emerald-100', percentage: '95%' },
+                          { region: 'West Africa', country: 'Nigeria, Ghana, Senegal', fellows: 310, density: 'High density', color: 'bg-emerald-950 border-emerald-800 text-emerald-100', percentage: '95%' },
                           { region: 'East Africa', country: 'Kenya, Tanzania, Rwanda', fellows: 240, density: 'Medium-high density', color: 'bg-emerald-800 border-emerald-700 text-emerald-200', percentage: '80%' },
                           { region: 'Southern Africa', country: 'South Africa, Zimbabwe, Zambia', fellows: 210, density: 'Medium density', color: 'bg-emerald-700 border-emerald-600 text-[#fff]', percentage: '65%' },
-                          { region: 'North Africa', country: 'Egypt, Morocco, Tunisia', fellows: 115, density: 'Moderate density', color: 'bg-emerald-600 border-emerald-550 text-[#fff]', percentage: '45%' },
+                          { region: 'North Africa', country: 'Egypt, Morocco, Tunisia', fellows: 115, density: 'Moderate density', color: 'bg-emerald-600 border-emerald-500 text-[#fff]', percentage: '45%' },
                         ].map((item) => (
                           <div 
                             key={item.region} 
@@ -1013,7 +1023,7 @@ DIAGNOSIS RESULT: ${
                         ))}
                       </div>
 
-                      <div className="space-y-4 bg-gray-50 dark:bg-black/25 p-5 rounded-2xl border border-gray-100 dark:border-gray-850 h-full flex flex-col justify-between">
+                      <div className="space-y-4 bg-gray-50 dark:bg-black/25 p-5 rounded-2xl border border-gray-100 dark:border-gray-800 h-full flex flex-col justify-between">
                         <div>
                           <p className="text-xs font-bold uppercase text-gray-400 font-mono tracking-widest mb-3">Geospatial Heat Index</p>
                           <div className="space-y-2">
@@ -1044,7 +1054,7 @@ DIAGNOSIS RESULT: ${
               {/* === TAB 2: REAL-TIME MONITORING OF FELLOW ACTIONS === */}
               {activeTab === 'realtime_monitoring' && (
                 <div className="space-y-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-850 pb-5">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-5">
                     <div>
                       <h2 className="text-2xl font-serif font-black text-gray-900 dark:text-white flex items-center gap-2">
                         <Activity className="w-6 h-6 text-emerald-500 animate-pulse" /> 
@@ -1063,7 +1073,7 @@ DIAGNOSIS RESULT: ${
                   </div>
 
                   {/* Filter Box */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 bg-gray-50 dark:bg-[#121212]/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-850">
+                  <div className="flex flex-wrap items-center justify-between gap-3 bg-gray-50 dark:bg-[#121212]/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
                     <div className="flex items-center gap-2">
                       <Filter className="w-4 h-4 text-gray-400" />
                       <span className="text-xs font-bold uppercase tracking-wider text-gray-400 font-mono">Filters:</span>
@@ -1075,10 +1085,10 @@ DIAGNOSIS RESULT: ${
                             className={`px-3 py-1.5 rounded-lg text-xs leading-none font-semibold transition-all ${
                               fellowContentFilter === fType 
                                 ? 'bg-[#5b5b40] dark:bg-[#cca568] text-white dark:text-black font-bold' 
-                                : 'bg-white dark:bg-black/40 text-gray-500 hover:text-gray-900 border border-gray-100 dark:border-gray-850'
+                                : 'bg-white dark:bg-black/40 text-gray-500 hover:text-gray-900 border border-gray-100 dark:border-gray-800'
                             }`}
                           >
-                            {fType}
+                            {fType === 'AI Note' ? 'Research Note' : fType}
                           </button>
                         ))}
                       </div>
@@ -1097,7 +1107,7 @@ DIAGNOSIS RESULT: ${
                       filteredFellowContents.map(item => (
                         <div 
                           key={item.id} 
-                          className="bg-white dark:bg-[#17171a]/50 p-6 rounded-3xl border border-gray-100 dark:border-gray-850 hover:border-gray-305 dark:hover:border-zinc-700 transition-all shadow-sm"
+                          className="bg-white dark:bg-[#17171a]/50 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 hover:border-gray-300 dark:hover:border-zinc-700 transition-all shadow-sm"
                         >
                           <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                             <div className="space-y-2">
@@ -1109,7 +1119,7 @@ DIAGNOSIS RESULT: ${
                                   item.contentType === 'Portfolio Showcase' ? 'bg-violet-500/10 text-violet-500' :
                                   'bg-zinc-500/10 text-gray-400'
                                 }`}>
-                                  {item.contentType}
+                                  {item.contentType === 'AI Note' ? 'Research Note' : item.contentType}
                                 </span>
                                 {item.track && (
                                   <span className="text-[10px] text-gray-400 font-mono bg-zinc-100 dark:bg-zinc-900 px-2 py-0.5 rounded">
@@ -1171,7 +1181,7 @@ DIAGNOSIS RESULT: ${
                                   <button
                                     onClick={() => moderateFellowContent(item.id, 'Active')}
                                     title="Reset status back to normal active"
-                                    className="p-1.5 md:p-2 bg-gray-100 hover:bg-gray-200 dark:bg-zinc-805 dark:hover:bg-zinc-800 text-gray-400 rounded-lg transition-colors"
+                                    className="p-1.5 md:p-2 bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-800 text-gray-400 rounded-lg transition-colors"
                                   >
                                     <RefreshCw className="w-3.5 h-3.5 animate-spin-hover" />
                                   </button>
@@ -1189,7 +1199,7 @@ DIAGNOSIS RESULT: ${
               {/* === TAB 3: FACULTY MENTORS CRUD === */}
               {activeTab === 'mentors' && (
                 <div className="space-y-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-850 pb-5">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-5">
                     <div>
                       <h2 className="text-2xl font-serif font-black text-gray-900 dark:text-white flex items-center gap-2">
                         <Users className="w-6 h-6 text-[#cca568]" /> 
@@ -1215,7 +1225,7 @@ DIAGNOSIS RESULT: ${
                       placeholder="Search mentor faculty directory by full name or industry..."
                       value={mentorSearch}
                       onChange={(e) => setMentorSearch(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-100 dark:border-gray-850 bg-gray-50 dark:bg-black/20 focus:outline-none focus:ring-1 focus:ring-[#cca568]"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-black/20 focus:outline-none focus:ring-1 focus:ring-[#cca568]"
                     />
                   </div>
 
@@ -1239,7 +1249,7 @@ DIAGNOSIS RESULT: ${
                             placeholder="e.g. Dr. Amina Yusuf"
                             value={mentorForm.name}
                             onChange={(e) => setMentorForm({ ...mentorForm, name: e.target.value })}
-                            className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-850 p-2.5 bg-white dark:bg-black focus:outline-none"
+                            className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-800 p-2.5 bg-white dark:bg-black focus:outline-none"
                           />
                         </div>
 
@@ -1251,7 +1261,7 @@ DIAGNOSIS RESULT: ${
                             placeholder="amina.y@minds.africa"
                             value={mentorForm.email}
                             onChange={(e) => setMentorForm({ ...mentorForm, email: e.target.value })}
-                            className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-850 p-2.5 bg-white dark:bg-black focus:outline-none"
+                            className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-800 p-2.5 bg-white dark:bg-black focus:outline-none"
                           />
                         </div>
 
@@ -1263,7 +1273,7 @@ DIAGNOSIS RESULT: ${
                             placeholder="Senior Policy Specialst"
                             value={mentorForm.role}
                             onChange={(e) => setMentorForm({ ...mentorForm, role: e.target.value })}
-                            className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-850 p-2.5 bg-white dark:bg-black focus:outline-none"
+                            className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-800 p-2.5 bg-white dark:bg-black focus:outline-none"
                           />
                         </div>
 
@@ -1272,7 +1282,7 @@ DIAGNOSIS RESULT: ${
                           <select 
                             value={mentorForm.industry}
                             onChange={(e) => setMentorForm({ ...mentorForm, industry: e.target.value })}
-                            className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-850 p-2.5 bg-white dark:bg-black focus:outline-none text-[#cca568]"
+                            className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-800 p-2.5 bg-white dark:bg-black focus:outline-none text-[#cca568]"
                           >
                             <option value="Digital Governance">Digital Governance</option>
                             <option value="Public Policy Formulation">Public Policy Formulation</option>
@@ -1289,7 +1299,7 @@ DIAGNOSIS RESULT: ${
                             min={1} max={100}
                             value={mentorForm.match}
                             onChange={(e) => setMentorForm({ ...mentorForm, match: parseInt(e.target.value) || 90 })}
-                            className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-850 p-2.5 bg-white dark:bg-black focus:outline-none font-mono"
+                            className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-800 p-2.5 bg-white dark:bg-black focus:outline-none font-mono"
                           />
                         </div>
 
@@ -1299,7 +1309,7 @@ DIAGNOSIS RESULT: ${
                             type="text" 
                             value={mentorForm.avatar}
                             onChange={(e) => setMentorForm({ ...mentorForm, avatar: e.target.value })}
-                            className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-850 p-2.5 bg-white dark:bg-black focus:outline-none font-mono"
+                            className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-800 p-2.5 bg-white dark:bg-black focus:outline-none font-mono"
                           />
                         </div>
 
@@ -1311,7 +1321,7 @@ DIAGNOSIS RESULT: ${
                             placeholder="Draft executive overview about publications and historical diplomatic advising milestones..."
                             value={mentorForm.bio}
                             onChange={(e) => setMentorForm({ ...mentorForm, bio: e.target.value })}
-                            className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-850 p-2.5 bg-white dark:bg-black focus:outline-none"
+                            className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-800 p-2.5 bg-white dark:bg-black focus:outline-none"
                           />
                         </div>
 
@@ -1319,7 +1329,7 @@ DIAGNOSIS RESULT: ${
                           <button 
                             type="button" 
                             onClick={() => setIsMentorModalOpen(false)}
-                            className="px-4 py-2 border border-gray-200 dark:border-gray-850 rounded-xl text-xs bg-white text-gray-500 hover:text-black dark:bg-zinc-950 dark:hover:text-white"
+                            className="px-4 py-2 border border-gray-200 dark:border-gray-800 rounded-xl text-xs bg-white text-gray-500 hover:text-black dark:bg-zinc-950 dark:hover:text-white"
                           >
                             Cancel
                           </button>
@@ -1339,7 +1349,7 @@ DIAGNOSIS RESULT: ${
                     {filteredMentors.map(mentor => (
                       <div 
                         key={mentor.id}
-                        className="bg-white dark:bg-[#121212]/50 rounded-3xl p-6 border border-gray-150 dark:border-gray-850 shadow-sm flex flex-col hover:border-[#cca568]/45 transition-colors relative"
+                        className="bg-white dark:bg-[#121212]/50 rounded-3xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col hover:border-[#cca568]/45 transition-colors relative"
                       >
                         <div className="flex gap-4">
                           <div className="w-14 h-14 rounded-full overflow-hidden shrink-0 border border-gray-200 dark:border-gray-800 bg-gray-100">
@@ -1356,7 +1366,7 @@ DIAGNOSIS RESULT: ${
                           "{mentor.bio}"
                         </p>
 
-                        <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-850 pt-4 mt-5">
+                        <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-4 mt-5">
                           <span className="text-[10px] font-mono font-bold bg-zinc-50 dark:bg-zinc-900 px-2 py-1 rounded">
                             {mentor.industry}
                           </span>
@@ -1365,7 +1375,7 @@ DIAGNOSIS RESULT: ${
                             <button
                               onClick={() => openMentorFormForEdit(mentor)}
                               title="Edit / Rectify"
-                              className="p-2 bg-gray-50 hover:bg-gray-150 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-gray-400 hover:text-[#cca568] rounded-xl transition-colors border border-gray-100 dark:border-gray-850"
+                              className="p-2 bg-gray-50 hover:bg-gray-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-gray-400 hover:text-[#cca568] rounded-xl transition-colors border border-gray-100 dark:border-gray-800"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
                             </button>
@@ -1387,7 +1397,7 @@ DIAGNOSIS RESULT: ${
               {/* === TAB 4: PAPERS & PUBLICATIONS CRUD === */}
               {activeTab === 'publications' && (
                 <div className="space-y-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-850 pb-5">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-5">
                     <div>
                       <h2 className="text-2xl font-serif font-black text-gray-900 dark:text-white flex items-center gap-2">
                         <BookOpen className="w-6 h-6 text-[#cca568]" /> 
@@ -1406,7 +1416,7 @@ DIAGNOSIS RESULT: ${
                   </div>
 
                   {/* Publications parameters */}
-                  <div className="flex flex-wrap gap-3 items-center justify-between bg-gray-50 dark:bg-black/20 p-4 rounded-2xl border border-gray-100 dark:border-gray-850">
+                  <div className="flex flex-wrap gap-3 items-center justify-between bg-gray-50 dark:bg-black/20 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
                     <div className="relative flex-1 max-w-md">
                       <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-gray-400" />
                       <input 
@@ -1414,7 +1424,7 @@ DIAGNOSIS RESULT: ${
                         placeholder="Search publications by title or author name..."
                         value={pubSearch}
                         onChange={(e) => setPubSearch(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-white dark:bg-black border border-gray-100 dark:border-gray-850 focus:outline-none"
+                        className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-white dark:bg-black border border-gray-100 dark:border-gray-800 focus:outline-none"
                       />
                     </div>
                     <div className="flex items-center gap-1.5 pl-2">
@@ -1426,7 +1436,7 @@ DIAGNOSIS RESULT: ${
                           className={`px-2.5 py-1 text-xs font-semibold leading-none rounded-lg transition-all border ${
                             pubTypeFilter === type 
                               ? 'bg-amber-500/10 text-[#cca568] border-[#cca568]/40 font-bold' 
-                              : 'bg-white dark:bg-black text-gray-400 border-gray-150 dark:border-gray-850'
+                              : 'bg-white dark:bg-black text-gray-400 border-gray-200 dark:border-gray-800'
                           }`}
                         >
                           {type}
@@ -1457,7 +1467,7 @@ DIAGNOSIS RESULT: ${
                               placeholder="e.g. AU Tariff Liberalization Strategy paper"
                               value={pubForm.title}
                               onChange={(e) => setPubForm({ ...pubForm, title: e.target.value })}
-                              className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-805 p-3 bg-white dark:bg-black focus:outline-none"
+                              className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-800 p-3 bg-white dark:bg-black focus:outline-none"
                             />
                           </div>
 
@@ -1468,7 +1478,7 @@ DIAGNOSIS RESULT: ${
                               placeholder="Dora Akunyili"
                               value={pubForm.author}
                               onChange={(e) => setPubForm({ ...pubForm, author: e.target.value })}
-                              className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-805 p-3 bg-white dark:bg-black focus:outline-none"
+                              className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-800 p-3 bg-white dark:bg-black focus:outline-none"
                             />
                           </div>
 
@@ -1477,7 +1487,7 @@ DIAGNOSIS RESULT: ${
                             <select
                               value={pubForm.type}
                               onChange={(e) => setPubForm({ ...pubForm, type: e.target.value as any })}
-                              className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-805 p-2.5 bg-white dark:bg-black focus:outline-none text-[#cca568]"
+                              className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-800 p-2.5 bg-white dark:bg-black focus:outline-none text-[#cca568]"
                             >
                               <option value="White Paper">White Paper</option>
                               <option value="Research Paper">Research Paper</option>
@@ -1491,7 +1501,7 @@ DIAGNOSIS RESULT: ${
                             <select
                               value={pubForm.track}
                               onChange={(e) => setPubForm({ ...pubForm, track: e.target.value })}
-                              className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-850 p-2.5 bg-white dark:bg-black focus:outline-none text-[#cca568]"
+                              className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-800 p-2.5 bg-white dark:bg-black focus:outline-none text-[#cca568]"
                             >
                               <option value="Digital Governance">Digital Governance</option>
                               <option value="Public Policy Formulation">Public Policy Formulation</option>
@@ -1507,7 +1517,7 @@ DIAGNOSIS RESULT: ${
                               placeholder="12 min read"
                               value={pubForm.readTime}
                               onChange={(e) => setPubForm({ ...pubForm, readTime: e.target.value })}
-                              className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-850 p-3 bg-white dark:bg-black focus:outline-none"
+                              className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-800 p-3 bg-white dark:bg-black focus:outline-none"
                             />
                           </div>
 
@@ -1516,7 +1526,7 @@ DIAGNOSIS RESULT: ${
                             <select
                               value={pubForm.status}
                               onChange={(e) => setPubForm({ ...pubForm, status: e.target.value as any })}
-                              className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-850 p-2.5 bg-white dark:bg-black focus:outline-none"
+                              className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-800 p-2.5 bg-white dark:bg-black focus:outline-none"
                             >
                               <option value="Published">Published (Live to platform)</option>
                               <option value="Draft">Draft (Restricted review)</option>
@@ -1531,7 +1541,7 @@ DIAGNOSIS RESULT: ${
                             placeholder="Draft body paragraphs, research conclusions, summaries, and policy directives..."
                             value={pubForm.content}
                             onChange={(e) => setPubForm({ ...pubForm, content: e.target.value })}
-                            className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-850 p-3 bg-white dark:bg-black focus:outline-none leading-relaxed font-sans"
+                            className="w-full text-xs rounded-xl border border-gray-100 dark:border-gray-800 p-3 bg-white dark:bg-black focus:outline-none leading-relaxed font-sans"
                           />
                         </div>
 
@@ -1539,7 +1549,7 @@ DIAGNOSIS RESULT: ${
                           <button 
                             type="button" 
                             onClick={() => setIsPubFormOpen(false)}
-                            className="px-4 py-2 border border-gray-200 dark:border-gray-850 rounded-xl text-xs bg-white text-gray-500 dark:bg-zinc-950"
+                            className="px-4 py-2 border border-gray-200 dark:border-gray-800 rounded-xl text-xs bg-white text-gray-500 dark:bg-zinc-950"
                           >
                             Cancel
                           </button>
@@ -1559,7 +1569,7 @@ DIAGNOSIS RESULT: ${
                     {filteredPublications.map(pub => (
                       <div 
                         key={pub.id}
-                        className="bg-white dark:bg-[#151518]/30 p-6 rounded-3xl border border-gray-100 dark:border-gray-850 space-y-4"
+                        className="bg-white dark:bg-[#151518]/30 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 space-y-4"
                       >
                         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                           <div>
@@ -1586,7 +1596,7 @@ DIAGNOSIS RESULT: ${
                           <div className="flex items-center gap-2 self-end md:self-start">
                             <button
                               onClick={() => openPubFormForEdit(pub)}
-                              className="p-2 border border-gray-100 dark:border-gray-850 hover:bg-gray-100 dark:hover:bg-zinc-900 rounded-xl text-gray-400 hover:text-[#cca568]"
+                              className="p-2 border border-gray-100 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-zinc-900 rounded-xl text-gray-400 hover:text-[#cca568]"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
                             </button>
@@ -1612,7 +1622,7 @@ DIAGNOSIS RESULT: ${
                           </div>
                         </div>
 
-                        <div className="bg-gray-50/40 dark:bg-black/20 p-4 rounded-2xl border border-gray-100 dark:border-gray-850 text-xs text-gray-500 dark:text-gray-400 leading-relaxed max-h-40 overflow-y-auto font-mono">
+                        <div className="bg-gray-50/40 dark:bg-black/20 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 text-xs text-gray-500 dark:text-gray-400 leading-relaxed max-h-40 overflow-y-auto font-mono">
                           {pub.content}
                         </div>
                       </div>
@@ -1624,7 +1634,7 @@ DIAGNOSIS RESULT: ${
               {/* === TAB 5: ACCESS / USERS ROLES PANEL === */}
               {activeTab === 'users' && (
                 <div className="space-y-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-850 pb-5">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-5">
                     <div>
                       <h2 className="text-2xl font-serif font-black text-gray-900 dark:text-white flex items-center gap-2">
                         <Users className="w-6 h-6 text-[#cca568]" /> 
@@ -1644,7 +1654,7 @@ DIAGNOSIS RESULT: ${
                       placeholder="Filter registered fellows by name, email or cohort code..."
                       value={userQuery}
                       onChange={(e) => setUserQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-100 dark:border-gray-850 bg-gray-50 dark:bg-black/20 focus:outline-none"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-black/20 focus:outline-none"
                     />
                   </div>
 
@@ -1691,11 +1701,11 @@ DIAGNOSIS RESULT: ${
                   )}
 
                   {/* High fidelity fallback profiles list */}
-                  <div className="bg-white dark:bg-[#151518]/30 rounded-3xl border border-gray-100 dark:border-gray-840 overflow-hidden shadow-sm">
+                  <div className="bg-white dark:bg-[#151518]/30 rounded-3xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm">
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="bg-gray-50 dark:bg-black/40 border-b border-gray-100 dark:border-gray-850 text-[10px] font-mono uppercase text-gray-400 tracking-wider">
+                          <tr className="bg-gray-50 dark:bg-black/40 border-b border-gray-100 dark:border-gray-800 text-[10px] font-mono uppercase text-gray-400 tracking-wider">
                             <th className="p-4 pl-6 w-12 text-center select-none">
                               <input 
                                 type="checkbox"
@@ -1718,7 +1728,7 @@ DIAGNOSIS RESULT: ${
                             <th className="p-4 pr-6 text-right">Adjust</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100 dark:divide-gray-850 text-xs text-gray-600 dark:text-gray-300">
+                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800 text-xs text-gray-600 dark:text-gray-300">
                           {users.filter(u => 
                             u.name.toLowerCase().includes(userQuery.toLowerCase()) || 
                             u.email.toLowerCase().includes(userQuery.toLowerCase())
@@ -1747,7 +1757,7 @@ DIAGNOSIS RESULT: ${
                                 <select 
                                   value={guy.role}
                                   onChange={(e) => handleUpdateUser(guy.id, { role: e.target.value })}
-                                  className="text-xs bg-gray-50 dark:bg-zinc-900 border border-gray-150 dark:border-gray-850 p-1.5 rounded-lg text-white"
+                                  className="text-xs bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-gray-800 p-1.5 rounded-lg text-white"
                                 >
                                   <option value="super-admin">super-admin</option>
                                   <option value="admin">admin</option>
@@ -1768,7 +1778,7 @@ DIAGNOSIS RESULT: ${
                               <td className="p-4">
                                 <div className="flex flex-wrap gap-1">
                                   {guy.permissions.map((p: string) => (
-                                    <span key={p} className="text-[9px] font-mono bg-zinc-100 dark:bg-zinc-900 px-1 py-0.2 rounded font-semibold">{p}</span>
+                                    <span key={p} className="text-[9px] font-mono bg-zinc-100 dark:bg-zinc-900 px-1 py-0.5 rounded font-semibold">{p}</span>
                                   ))}
                                 </div>
                               </td>
@@ -1790,12 +1800,20 @@ DIAGNOSIS RESULT: ${
                                   </button>
                                   <button
                                     onClick={() => {
-                                      if (confirm(`Are you absolutely sure you want to fully purge candidate "${guy.name}" from the fellowship rosters?`)) {
+                                      if (pendingConfirmId === `user-${guy.id}`) {
                                         deleteUser(guy.id);
+                                        setPendingConfirmId(null);
+                                      } else {
+                                        setPendingConfirmId(`user-${guy.id}`);
+                                        toast.warning(`Click purge again to remove "${guy.name}" permanently.`);
                                       }
                                     }}
-                                    className="p-1 text-gray-400 hover:text-red-400 transition-all rounded hover:bg-red-500/10"
-                                    title="Purge Candidate Account"
+                                    className={`p-1 transition-all rounded ${
+                                      pendingConfirmId === `user-${guy.id}`
+                                        ? 'bg-red-600 text-white'
+                                        : 'text-gray-400 hover:text-red-400 hover:bg-red-500/10'
+                                    }`}
+                                    title={pendingConfirmId === `user-${guy.id}` ? 'Click again to confirm purge' : 'Purge Candidate Account'}
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
@@ -1813,7 +1831,7 @@ DIAGNOSIS RESULT: ${
               {/* === TAB 10: VIRTUAL ROOMS TRANSCRIPTS & MEDIA SUPERVISION === */}
               {activeTab === 'virtual_rooms' && (
                 <div className="space-y-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-850 pb-5">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-5">
                     <div>
                       <h2 className="text-2xl font-serif font-black text-gray-900 dark:text-white flex items-center gap-2">
                         <Video className="w-6 h-6 text-[#cca568]" /> 
@@ -1833,7 +1851,7 @@ DIAGNOSIS RESULT: ${
                         {virtualRooms.map(room => (
                           <div 
                             key={room.id}
-                            className="p-4 rounded-2xl border border-gray-150 dark:border-gray-800 bg-gray-50/50 dark:bg-zinc-900/40 hover:border-[#cca568]/40 transition-all cursor-pointer"
+                            className="p-4 rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-zinc-900/40 hover:border-[#cca568]/40 transition-all cursor-pointer"
                           >
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-xs font-mono font-bold text-gray-400 uppercase tracking-widest">{room.id}</span>
@@ -1858,10 +1876,10 @@ DIAGNOSIS RESULT: ${
                       {virtualRooms.map(room => (
                         <div 
                           key={room.id} 
-                          className="bg-zinc-50 dark:bg-zinc-900/20 border border-gray-150 dark:border-gray-800 rounded-3xl p-6 space-y-6"
+                          className="bg-zinc-50 dark:bg-zinc-900/20 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 space-y-6"
                         >
                           {/* Room Header */}
-                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-850 pb-4">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
                             <div>
                               <div className="flex items-center gap-2">
                                 <span className={`w-3 h-3 rounded-full ${room.color}`} />
@@ -1890,7 +1908,7 @@ DIAGNOSIS RESULT: ${
                                 <Activity className="w-3.5 h-3.5 text-red-500 animate-pulse" />
                                 Interactive Transcript Stream
                               </h4>
-                              <div className="bg-white dark:bg-black p-4 rounded-2xl border border-gray-150 dark:border-gray-850 flex-1 max-h-72 overflow-y-auto space-y-3 font-mono text-[11px] leading-relaxed select-text">
+                              <div className="bg-white dark:bg-black p-4 rounded-2xl border border-gray-200 dark:border-gray-800 flex-1 max-h-72 overflow-y-auto space-y-3 font-mono text-[11px] leading-relaxed select-text">
                                 {room.transcripts.length === 0 ? (
                                   <div className="text-gray-400 text-center py-10 italic">No audio transactions detected. Waiting for speak triggers...</div>
                                 ) : (
@@ -1913,12 +1931,12 @@ DIAGNOSIS RESULT: ${
                                 <MessageSquare className="w-3.5 h-3.5 text-blue-400" />
                                 Room Chat Streams
                               </h4>
-                              <div className="bg-white dark:bg-black p-4 rounded-2xl border border-gray-150 dark:border-gray-850 flex-1 max-h-72 overflow-y-auto space-y-3 font-mono text-[11px]">
+                              <div className="bg-white dark:bg-black p-4 rounded-2xl border border-gray-200 dark:border-gray-800 flex-1 max-h-72 overflow-y-auto space-y-3 font-mono text-[11px]">
                                 {room.messages.length === 0 ? (
                                   <div className="text-gray-400 text-center py-10 italic text-xs">No text transactions.</div>
                                 ) : (
                                   room.messages.map(msg => (
-                                    <div key={msg.id} className="bg-gray-50/50 dark:bg-zinc-900/60 p-2.5 rounded-xl border border-gray-100 dark:border-gray-850">
+                                    <div key={msg.id} className="bg-gray-50/50 dark:bg-zinc-900/60 p-2.5 rounded-xl border border-gray-100 dark:border-gray-800">
                                       <div className="flex justify-between mb-0.5 text-[10px] text-gray-400">
                                         <span className="font-bold">{msg.sender}</span>
                                         <span>{msg.time}</span>
@@ -1938,7 +1956,7 @@ DIAGNOSIS RESULT: ${
                               {room.participants.map(part => (
                                 <div 
                                   key={part.id}
-                                  className="flex items-center justify-between p-3 rounded-xl border border-gray-150 dark:border-gray-850 bg-white dark:bg-black"
+                                  className="flex items-center justify-between p-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-black"
                                 >
                                   <div>
                                     <div className="font-semibold text-xs text-gray-900 dark:text-white">{part.name}</div>
@@ -1961,12 +1979,20 @@ DIAGNOSIS RESULT: ${
                                     </button>
                                     <button 
                                       onClick={() => {
-                                        if (confirm(`Expel and disconnect member "${part.name}" from ${room.name}?`)) {
+                                        if (pendingConfirmId === `room-${room.id}-${part.id}`) {
                                           toggleParticipantMedia(room.id, part.id, 'left', { name: part.name });
+                                          setPendingConfirmId(null);
+                                        } else {
+                                          setPendingConfirmId(`room-${room.id}-${part.id}`);
+                                          toast.warning(`Click evict again to disconnect "${part.name}".`);
                                         }
                                       }}
-                                      className="p-1.5 rounded bg-rose-500/5 text-rose-400 hover:bg-rose-500 hover:text-white transition-all ml-1"
-                                      title="Evict Member"
+                                      className={`p-1.5 rounded transition-all ml-1 ${
+                                        pendingConfirmId === `room-${room.id}-${part.id}`
+                                          ? 'bg-rose-600 text-white'
+                                          : 'bg-rose-500/5 text-rose-400 hover:bg-rose-500 hover:text-white'
+                                      }`}
+                                      title={pendingConfirmId === `room-${room.id}-${part.id}` ? 'Click again to confirm eviction' : 'Evict Member'}
                                     >
                                       <CloseIcon className="w-3 h-3" />
                                     </button>
@@ -1985,7 +2011,7 @@ DIAGNOSIS RESULT: ${
               {/* === TAB 11: CONDUCT INCIDENTS & BEHAVIORAL REPORTS === */}
               {activeTab === 'incident_reports' && (
                 <div className="space-y-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-850 pb-5">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-5">
                     <div>
                       <h2 className="text-2xl font-serif font-black text-gray-900 dark:text-white flex items-center gap-2">
                         <AlertTriangle className="w-6 h-6 text-[#cca568]" /> 
@@ -1998,7 +2024,7 @@ DIAGNOSIS RESULT: ${
                   </div>
 
                   <div className="bg-white dark:bg-[#121212] rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
-                    <div className="p-6 border-b border-gray-100 dark:border-gray-850 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-900/20">
+                    <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-900/20">
                       <h3 className="font-serif font-black text-base">Conduct & Moderation Directory</h3>
                       <span className="text-[11px] text-gray-400 font-mono">
                         {incidentReports.filter(r => r.status === 'Pending').length} Pending Audits
@@ -2008,7 +2034,7 @@ DIAGNOSIS RESULT: ${
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs">
                         <thead>
-                          <tr className="bg-gray-50 dark:bg-zinc-900/40 text-gray-400 font-mono border-b border-gray-150 dark:border-gray-850">
+                          <tr className="bg-gray-50 dark:bg-zinc-900/40 text-gray-400 font-mono border-b border-gray-200 dark:border-gray-800">
                             <th className="p-4 pl-6">Target Person</th>
                             <th className="p-4">Reported By</th>
                             <th className="p-4">Channel Origin</th>
@@ -2018,7 +2044,7 @@ DIAGNOSIS RESULT: ${
                             <th className="p-4 pr-6 text-right">Moderation Execs</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100 dark:divide-gray-850">
+                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                           {incidentReports.length === 0 ? (
                             <tr>
                               <td colSpan={7} className="p-10 text-center text-gray-400 italic">
@@ -2097,7 +2123,7 @@ DIAGNOSIS RESULT: ${
               {/* === TAB 6: CREDENTIALS / CERTIFICATE VERIFICATION === */}
               {activeTab === 'verification' && (
                 <div className="space-y-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-850 pb-5">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-5">
                     <div>
                       <h2 className="text-2xl font-serif font-black text-gray-900 dark:text-white flex items-center gap-2">
                         <Award className="w-6 h-6 text-[#cca568]" /> 
@@ -2148,7 +2174,7 @@ DIAGNOSIS RESULT: ${
                       <div 
                         key={v.id}
                         className={`bg-white dark:bg-[#121212]/50 rounded-3xl p-6 border transition-all ${
-                          selectedCertIds.includes(v.id) ? 'border-[#cca568] ring-2 ring-[#cca568]/45 shadow-md' : 'border-gray-150 dark:border-gray-850'
+                          selectedCertIds.includes(v.id) ? 'border-[#cca568] ring-2 ring-[#cca568]/45 shadow-md' : 'border-gray-200 dark:border-gray-800'
                         } flex flex-col justify-between`}
                       >
                         <div className="space-y-2">
@@ -2186,7 +2212,7 @@ DIAGNOSIS RESULT: ${
                           </div>
                         )}
 
-                        <div className="border-t border-gray-100 dark:border-gray-850 pt-4 mt-5 flex items-center justify-between gap-2">
+                        <div className="border-t border-gray-100 dark:border-gray-800 pt-4 mt-5 flex items-center justify-between gap-2">
                           <span className="text-[10px] text-gray-400 font-mono">ID: {v.id}</span>
                           <div className="flex gap-1.5 shrink-0">
                             {v.status !== 'Approved' && (
@@ -2216,7 +2242,7 @@ DIAGNOSIS RESULT: ${
               {/* === TAB 7: SITE PAGES & SECTIONS === */}
               {activeTab === 'pages' && (
                 <div className="space-y-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-850 pb-5">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-5">
                     <div>
                       <h2 className="text-2xl font-serif font-black text-gray-900 dark:text-white flex items-center gap-2">
                         <Layers className="w-6 h-6 text-[#cca568]" /> 
@@ -2228,15 +2254,15 @@ DIAGNOSIS RESULT: ${
                     </div>
                   </div>
 
-                  <div className="bg-white dark:bg-[#121212]/30 rounded-3xl border border-gray-100 dark:border-gray-855 p-6 space-y-6">
+                  <div className="bg-white dark:bg-[#121212]/30 rounded-3xl border border-gray-100 dark:border-gray-800 p-6 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {[
-                        { name: 'Dashboard Module', path: '/', sections: ['Alumni Spotlight', 'Weekly Telemetry Block', 'Quick AI Companion'] },
+                        { name: 'Dashboard Module', path: '/', sections: ['Alumni Spotlight', 'Weekly Telemetry Block', 'Quick Companion'] },
                         { name: 'Learning Hub Module', path: '/learning-hub', sections: ['Syllabus Grid', 'Assignment Deliverer', 'Peer Forum boards'] },
                         { name: 'Certifications Module', path: '/certifications', sections: ['Grades Radar Canvas', 'Security Proof box', 'Dispatcher engine'] },
                         { name: 'Virtual Classrooms', path: '/rooms', sections: ['Lectures Player', 'Chat ticker Feed', 'Multiplayer Whiteboard Canvas'] },
                       ].map(module => (
-                        <div key={module.name} className="p-5 bg-gray-50 dark:bg-black/30 rounded-2xl border border-gray-100 dark:border-gray-850 space-y-3">
+                        <div key={module.name} className="p-5 bg-gray-50 dark:bg-black/30 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-3">
                           <div className="flex items-center justify-between">
                             <h3 className="font-bold text-sm text-gray-950 dark:text-white">{module.name}</h3>
                             <code className="text-[10px] text-amber-500 font-mono">{module.path}</code>
@@ -2257,17 +2283,17 @@ DIAGNOSIS RESULT: ${
                 </div>
               )}
 
-              {/* === TAB 8: GEMINI AI CONTROL TERMINAL === */}
+              {/* === TAB 8: SYSTEM DIAGNOSTICS CONTROL TERMINAL === */}
               {activeTab === 'terminal' && (
                 <div className="space-y-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-850 pb-5">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-5">
                     <div>
                       <h2 className="text-2xl font-serif font-black text-gray-900 dark:text-white flex items-center gap-2">
                         <Terminal className="w-6 h-6 text-[#cca568] animate-pulse" /> 
-                        Admin Intelligent diagnostics
+                        Admin System Diagnostics
                       </h2>
                       <p className="text-gray-500 text-xs mt-1">
-                        Utilize server-side Gemini 2.5 models to diagnose at-risk fellows, draft executive releases, or inspect security hashes.
+                        Run diagnostic queries to evaluate at-risk fellows, draft executive releases, or inspect security hashes.
                       </p>
                     </div>
                   </div>
@@ -2287,7 +2313,7 @@ DIAGNOSIS RESULT: ${
                       {isTerminalProcessing && (
                         <div className="text-amber-400 flex items-center gap-2 animate-pulse">
                           <Loader2 className="w-3.5 h-3.5 animate-spin text-[#cca568]" />
-                          <span>Gemini core formulating analytics vector...</span>
+                          <span>Formulating analytics diagnostic...</span>
                         </div>
                       )}
                     </div>
@@ -2310,7 +2336,7 @@ DIAGNOSIS RESULT: ${
                     </div>
                   </div>
 
-                  <div className="bg-gray-50 dark:bg-black/20 p-4 rounded-2xl border border-gray-100 dark:border-gray-850 space-y-2">
+                  <div className="bg-gray-50 dark:bg-black/20 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-2">
                     <p className="text-xs font-bold text-gray-400 font-mono uppercase">Quick Directive Shortcuts</p>
                     <div className="flex flex-wrap gap-2">
                       {[
@@ -2324,7 +2350,7 @@ DIAGNOSIS RESULT: ${
                           onClick={() => {
                             if (!isTerminalProcessing) runAIAdminDirective(item.cmd);
                           }}
-                          className="px-3 py-2 bg-white dark:bg-black/40 border border-gray-100 dark:border-gray-850 hover:bg-gray-100 text-[11px] font-mono text-gray-400 hover:text-white rounded-lg transition-colors text-left"
+                          className="px-3 py-2 bg-white dark:bg-black/40 border border-gray-100 dark:border-gray-800 hover:bg-gray-100 text-[11px] font-mono text-gray-400 hover:text-white rounded-lg transition-colors text-left"
                         >
                           {item.text} <span className="text-[#cca568] font-bold">({item.cmd})</span>
                         </button>
@@ -2334,10 +2360,10 @@ DIAGNOSIS RESULT: ${
                 </div>
               )}
 
-              {/* === TAB 9: REVOLUTIONARY AUDIT SECURITY LOGS === */}
+              {/* === TAB 9: AUDIT SECURITY LOGS === */}
               {activeTab === 'audit_logs' && (
                 <div className="space-y-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-850 pb-5">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-5">
                     <div>
                       <h2 className="text-2xl font-serif font-black text-gray-900 dark:text-white flex items-center gap-2">
                         <FileText className="w-6 h-6 text-[#cca568]" /> 
@@ -2356,11 +2382,11 @@ DIAGNOSIS RESULT: ${
                   </div>
 
                   {/* Log Ticker terminal */}
-                  <div className="bg-white dark:bg-black rounded-3xl border border-gray-150 dark:border-zinc-850 p-4 shadow-inner overflow-hidden">
-                    <div className="bg-zinc-950 p-5 rounded-2xl border border-zinc-850 font-mono text-xs space-y-2 max-h-[500px] overflow-y-auto">
+                  <div className="bg-white dark:bg-black rounded-3xl border border-gray-200 dark:border-zinc-800 p-4 shadow-inner overflow-hidden">
+                    <div className="bg-zinc-950 p-5 rounded-2xl border border-zinc-800 font-mono text-xs space-y-2 max-h-[500px] overflow-y-auto">
                       {auditLogs.map((log: AuditLogItem) => (
-                        <div key={log.id} className="flex gap-4/5 py-1 flex-col md:flex-row leading-normal border-b border-zinc-900 pb-1.5">
-                          <span className="text-gray-550 shrink-0 text-[10px] w-36 font-bold">{log.timestamp}</span>
+                        <div key={log.id} className="flex gap-4 py-1 flex-col md:flex-row leading-normal border-b border-zinc-900 pb-1.5">
+                          <span className="text-gray-500 shrink-0 text-[10px] w-36 font-bold">{log.timestamp}</span>
                           <span className={`text-[10px] font-bold uppercase shrink-0 w-24 ${
                             log.category === 'Security' ? 'text-red-400' :
                             log.category === 'Moderation' ? 'text-amber-500' :

@@ -129,6 +129,64 @@ export default function DiplomaticFooter() {
         {/* 54 Sovereign African Countries Flags Showcase */}
         <AfricanFlagsGrid />
 
+        {/* Official Website Contact & Secretariat Directory */}
+        <div id="contact" className="mt-12 p-8 md:p-10 rounded-3xl bg-white/[0.03] border border-white/10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+            <div>
+              <div className="inline-flex items-center gap-2 text-[#D4AF37] text-xs font-bold uppercase tracking-widest mb-2">
+                <Mail className="w-4 h-4" /> Official Contact Directory
+              </div>
+              <h3 className="text-2xl md:text-3xl font-serif font-bold text-white">
+                Contact the Golden Minds Africa Secretariat
+              </h3>
+            </div>
+            <p className="text-xs text-gray-400 max-w-md">
+              Reach the appropriate institutional desk directly for diplomatic protocol, general inquiries, regional chapters, or strategic partnerships.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              {
+                label: 'Protocol & Diplomatic Affairs',
+                email: 'protocol@goldenmindsafrica.co.za',
+                desc: 'Official delegations, summits, and diplomatic correspondence.'
+              },
+              {
+                label: 'General Enquiries',
+                email: 'enquire@goldenmindsafrica.co.za',
+                desc: 'Fellowship admissions, program info, and public desk.'
+              },
+              {
+                label: 'Continental Chapters',
+                email: 'chapters@goldenmindsafrica.co.za',
+                desc: 'Country chapters, campus hubs, and regional delegations.'
+              },
+              {
+                label: 'Partnerships & Alliances',
+                email: 'partnership@goldenmindsafrica.co.za',
+                desc: 'Institutional MoUs, sponsorships, and research alliances.'
+              }
+            ].map((item) => (
+              <a
+                key={item.email}
+                href={`mailto:${item.email}`}
+                className="p-5 rounded-2xl bg-black/50 border border-white/10 hover:border-[#D4AF37]/60 transition-all group block"
+              >
+                <div className="text-[11px] font-bold uppercase tracking-wider text-[#D4AF37] mb-1.5">
+                  {item.label}
+                </div>
+                <div className="text-xs sm:text-sm font-semibold text-white group-hover:text-[#D4AF37] transition-colors break-all">
+                  {item.email}
+                </div>
+                <p className="text-[11px] text-gray-400 mt-2 leading-relaxed">
+                  {item.desc}
+                </p>
+              </a>
+            ))}
+          </div>
+        </div>
+
         {/* Main Footer Links Columns */}
         <div className="py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
           
@@ -157,7 +215,19 @@ export default function DiplomaticFooter() {
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-[#D4AF37] shrink-0" />
-                <span>info@goldenmindsorganization.org</span>
+                <a href="mailto:enquire@goldenmindsafrica.co.za" className="hover:text-[#D4AF37] transition-colors">enquire@goldenmindsafrica.co.za</a>
+              </div>
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                <a href="mailto:protocol@goldenmindsafrica.co.za" className="hover:text-[#D4AF37] transition-colors">protocol@goldenmindsafrica.co.za</a>
+              </div>
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                <a href="mailto:chapters@goldenmindsafrica.co.za" className="hover:text-[#D4AF37] transition-colors">chapters@goldenmindsafrica.co.za</a>
+              </div>
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                <a href="mailto:partnership@goldenmindsafrica.co.za" className="hover:text-[#D4AF37] transition-colors">partnership@goldenmindsafrica.co.za</a>
               </div>
             </div>
           </div>

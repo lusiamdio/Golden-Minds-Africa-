@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShieldCheck, Cpu, BookOpen, GraduationCap, Coins, Globe, ArrowRight, CheckCircle2, Sparkles, X, ChevronRight } from 'lucide-react';
+import { ShieldCheck, Cpu, BookOpen, GraduationCap, Coins, Globe, ArrowRight, CheckCircle2, X, ChevronRight } from 'lucide-react';
 
 interface Pillar {
   id: string;

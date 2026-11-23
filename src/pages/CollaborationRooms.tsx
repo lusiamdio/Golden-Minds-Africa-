@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { MessageSquare, FileText, PenTool, Users, Plus, Hash, Sparkles, Search, MoreVertical } from 'lucide-react';
+import { MessageSquare, FileText, PenTool, Users, Plus, Hash, Search, MoreVertical } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { GoogleGenAI } from '@google/genai';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+import { ai } from '../lib/gemini';
 
 const MOCK_ROOMS = [];
 
@@ -37,7 +35,7 @@ export default function CollaborationRooms() {
         model: 'gemini-2.5-flash',
         contents: `Based on this chat history: ${messages.map(m => m.text).join(' ')}. Suggest a next step or action item for the team.`
       });
-      setMessages([...messages, { id: Date.now(), sender: 'AI Assistant', text: response.text || '', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
+      setMessages([...messages, { id: Date.now(), sender: 'Room Assistant', text: response.text || '', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
     } catch (error) {
       console.error('AI Error:', error);
     } finally {
@@ -132,7 +130,7 @@ export default function CollaborationRooms() {
                 {messages.map(msg => (
                   <div key={msg.id} className={`flex flex-col ${msg.sender === 'You' ? 'items-end' : 'items-start'}`}>
                     <div className="flex items-baseline gap-2 mb-1">
-                      <span className={`text-xs font-bold ${msg.sender === 'AI Assistant' ? 'text-purple-500' : 'text-gray-900 dark:text-white'}`}>
+                      <span className={`text-xs font-bold ${msg.sender === 'Room Assistant' ? 'text-purple-500' : 'text-gray-900 dark:text-white'}`}>
                         {msg.sender}
                       </span>
                       <span className="text-[10px] text-gray-500">{msg.time}</span>
@@ -140,7 +138,7 @@ export default function CollaborationRooms() {
                     <div className={`px-4 py-2 rounded-2xl max-w-[80%] text-sm ${
                       msg.sender === 'You' 
                         ? 'bg-[#ff4e00] text-white rounded-tr-none' 
-                        : msg.sender === 'AI Assistant'
+                        : msg.sender === 'Room Assistant'
                         ? 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20 rounded-tl-none'
                         : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-tl-none'
                     }`}>
@@ -155,9 +153,9 @@ export default function CollaborationRooms() {
                     onClick={handleAIAssist}
                     disabled={isGenerating}
                     className="p-2.5 rounded-xl bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 transition-colors disabled:opacity-50"
-                    title="AI Assist"
+                    title="Facilitator Assist"
                   >
-                    <Sparkles className="w-5 h-5" />
+                    <MessageSquare className="w-5 h-5" />
                   </button>
                   <input
                     type="text"

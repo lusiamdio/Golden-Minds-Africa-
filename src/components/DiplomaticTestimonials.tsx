@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Quote, Sparkles, Star } from 'lucide-react';
+import { Quote, Star } from 'lucide-react';
 
 interface Testimonial {
   quote: string;

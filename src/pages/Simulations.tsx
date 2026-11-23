@@ -22,7 +22,7 @@ export default function Simulations() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold font-serif text-gray-900">Leadership Simulation Lab</h1>
-          <p className="text-gray-500 mt-2 text-sm sm:text-base">Test your decision-making skills in high-stakes, AI-driven scenarios.</p>
+          <p className="text-gray-500 mt-2 text-sm sm:text-base">Test your decision-making skills in high-stakes, real-world crisis scenarios.</p>
         </div>
         <div className="flex items-center gap-4 bg-white px-4 sm:px-6 py-3 rounded-2xl border border-gray-200 shadow-sm w-full sm:w-auto overflow-x-auto hide-scrollbar">
           <div className="text-center shrink-0">
@@ -201,7 +201,7 @@ export default function Simulations() {
               </div>
 
               <div className="bg-blue-50 p-4 sm:p-6 rounded-2xl border border-blue-100">
-                <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2 text-sm sm:text-base"><Cpu className="w-4 h-4 sm:w-5 sm:h-5" /> AI Sovereign Advisor</h3>
+                <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2 text-sm sm:text-base"><Cpu className="w-4 h-4 sm:w-5 sm:h-5" /> Sovereign Advisor</h3>
                 <p className="text-xs sm:text-sm text-blue-800 italic">
                   "Minister, historical data from similar emerging market shocks suggests that capital controls (Option C) provide immediate relief but take years to recover from. An aggressive rate hike (Option A) is the standard orthodox response, though it will hurt the working class immediately."
                 </p>
